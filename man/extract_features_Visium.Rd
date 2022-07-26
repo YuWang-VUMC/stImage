@@ -16,7 +16,7 @@ extract_features_Visium(
 \item{...}{}
 }
 \value{
-
+A matrix
 }
 \description{
 extract image features for Visium dataset

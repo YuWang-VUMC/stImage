@@ -7,14 +7,18 @@
 #' @param rawImage
 #' @param savePatchOnImage
 #'
-#' @return
+#' @return A matrix
+#' @importFrom keras application_vgg16
+#' @importFrom keras image_load
+#' @importFrom keras imagenet_preprocess_input
+#' @importFrom plotrix draw.circle
 #' @export
 #'
 #' @examples
 extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor=1, rawImage = FALSE, savePatchOnImage=NULL) {
-  suppressMessages(require(tensorflow, warn.conflicts = F, quietly = T))
-  suppressMessages(require(keras, warn.conflicts = F, quietly = T))
-  suppressMessages(require(plotrix, warn.conflicts = F, quietly = T))
+  #suppressMessages(require(tensorflow, warn.conflicts = F, quietly = T))
+  #suppressMessages(require(keras, warn.conflicts = F, quietly = T))
+  #suppressMessages(require(plotrix, warn.conflicts = F, quietly = T))
 
   patchRadius <- as.integer(patchSize/2)
   model <- application_vgg16(weights = 'imagenet', include_top = FALSE, pooling='avg', input_shape = c(patchSize,patchSize,3))
@@ -23,7 +27,7 @@ extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor
   message(paste0("Loaded image file ", imgFile, " with size: ", paste(dim(img),collapse="X")))
 
   positionTable <- round(positionTable*scaleFactor)
-  positionTable <- positionTable+1 #positionTable 0 based?
+  positionTable <- positionTable + 1 #positionTable 0 based?
   message(paste0("Loaded position table with ",nrow(positionTable)," spots position"))
 
   imgPatchAll <- array(dim=c(nrow(positionTable),patchSize,patchSize,3))
@@ -70,7 +74,8 @@ extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor
 #' @param imgFile
 #' @param ...
 #'
-#' @return
+#' @return A matrix
+#' @importFrom jsonlite fromJSON
 #' @export
 #'
 #' @examples

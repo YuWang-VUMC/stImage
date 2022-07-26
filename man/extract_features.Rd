@@ -17,7 +17,7 @@ extract_features(
 \item{savePatchOnImage}{}
 }
 \value{
-
+A matrix
 }
 \description{
 extract image features

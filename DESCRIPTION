@@ -19,7 +19,10 @@ Imports:
     png,
     tensorflow,
     keras,
-    plotrix
+    plotrix,
+    IntNMF,
+    omicade4,
+    tensorBSS
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

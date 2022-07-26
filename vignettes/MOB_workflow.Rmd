@@ -73,15 +73,15 @@ patchSize=200
 # Extract features
 
 ```{r extract.feature, echo = F}
-require(rjson)
-scaleFactorFile=paste0(spatial_path,"/scalefactors_json.json")
-scaleFactor=fromJSON(file = scaleFactorFile)$tissue_hires_scalef
+#require(jsonlite)
+#scaleFactorFile=paste0(spatial_path,"/scalefactors_json.json")
+#scaleFactor=fromJSON(scaleFactorFile)$tissue_hires_scalef
+#
+#positionTable=read.csv(positionTableFile, col.names = c("barcodes", "tissue", "row", "col", "imagerow", "imagecol"), as.is = TRUE, header=FALSE,row.names=1)
+#positionTable=positionTable[which(positionTable[,1]==1),, drop = FALSE]
+#positionTable=positionTable[,c(4:5)] #only need ImageX and ImageY
 
-positionTable=read.csv(positionTableFile, col.names = c("barcodes", "tissue", "row", "col", "imagerow", "imagecol"), as.is = TRUE, header=FALSE,row.names=1)
-positionTable=positionTable[which(positionTable[,1]==1),, drop = FALSE]
-positionTable=positionTable[,c(4:5)] #only need ImageX and ImageY
-
-imageFeatures_raw=extract_features_Visium(spatial_path, rawImage = T, imgFile=rawimg, savePatchOnImage = paste0(proj_folder, "_rawpatch","_", tstamp, ".png"))
+imageFeatures_raw=extract_features_Visium(spatial_path, rawImage = F, savePatchOnImage = paste0(proj_folder, "_rawpatch","_", tstamp, ".png"))
 #write.csv(imageFeatures_raw,paste0(workDir,"/",proj_folder,"_features_raw_",tstamp,".csv"))
 
 ```
@@ -91,7 +91,7 @@ imageFeatures_raw=extract_features_Visium(spatial_path, rawImage = T, imgFile=ra
 ```{r load.data, echo = F}
 #imageFeatures_raw <- read.csv(paste0(workDir,"/",proj_folder,"_features_raw_",tstamp,".csv"), row.names=1)
 
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- LoadImageFeature10X(data_path, filename = h5_file,
+Adult_Mouse_Olfactory_Bulb_rawimage_obj <- LoadImageFeatureVisium(data_path, filename = h5_file,
                                   imageFeatures = imageFeatures_raw)
 
 ```

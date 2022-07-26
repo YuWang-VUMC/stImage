@@ -75,7 +75,7 @@ extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor
 #'
 #' @examples
 extract_features_Visium <- function(spatialDir, patchSize=NULL, rawImage = FALSE, imgFile=NULL, ...) {
-  suppressMessages(require(rjson, warn.conflicts = F, quietly = T))
+  suppressMessages(require(jsonlite, warn.conflicts = F, quietly = T))
 
   positionTableFile <- paste0(spatialDir,"/tissue_positions_list.csv")
   positionTable <- read.csv(positionTableFile,header=FALSE,row.names=1)
@@ -87,11 +87,11 @@ extract_features_Visium <- function(spatialDir, patchSize=NULL, rawImage = FALSE
     imgFile=imgFile
     scaleFactor=1
     if(is.null(patchSize)){
-      patchSize=fromJSON(file = scaleFactorFile)$spot_diameter_fullres
+      patchSize=fromJSON(scaleFactorFile)$spot_diameter_fullres
     }
   } else {
     imgFile <- paste0(spatialDir,"/tissue_hires_image.png")
-    scaleFactor <- fromJSON(file = scaleFactorFile)$tissue_hires_scalef
+    scaleFactor <- fromJSON(scaleFactorFile)$tissue_hires_scalef
   }
   imageFeatures <- extract_features(imgFile, positionTable, patchSize=patchSize, scaleFactor=scaleFactor, rawImage=rawImage, ...)
 

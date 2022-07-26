@@ -16,7 +16,10 @@ Depends:
     methods
 Imports:
     jsonlite,
-    png
+    png,
+    tensorflow,
+    keras,
+    plotrix
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

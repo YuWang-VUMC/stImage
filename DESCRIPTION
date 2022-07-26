@@ -1,12 +1,26 @@
 Package: stImage
-Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Date: 2022-07-25
+Title: R package for integration analysis of spatial transcriptomics and morphology images
+Description: A toolkit for integration analysis of spatial transcriptomics data, including gene expression matrix and morphology images. 'stImage' aims to enable users to identify and interpret clusters of spots related to tissue morphology from spatial transcriptomic data. 
+Authors@R: c(
+    person(given = "Yu", family = "Wang", email = "yu.wang.2@vumc.org", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2819-4551")),
+    person(given = "Qi", family = "Liu", email = "qi.liu@vumc.org", role = "ctb"),
+    person(given = "Yu", family = "Shyr", email = "yu.shyr@vumc.org", role = "ctb", comment = c(ORCID= "0000-0003-2086-9670")),
+    person(given = "Shilin", family = "Zhao", email = "shilin.zhao.1@vumc.org", role = "ctb")
+    )
+URL: https://github.com/YuWang-VUMC/stImage
+BugReports: https://github.com/YuWang-VUMC/stImage/issues
+Depends:
+    R (>= 4.0.0),
+    methods
+Imports:
+    jsonlite,
+    png
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

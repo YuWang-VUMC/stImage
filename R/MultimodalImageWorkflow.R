@@ -1,3 +1,24 @@
+#' integrating and processing for Visium dataset
+#'
+#' @param object
+#' @param normalizeMethod
+#' @param ImageFeaturePCs
+#' @param pcaDim_s
+#' @param pcaDim_i
+#' @param geneResolution
+#' @param imageFeatureResolution
+#' @param imageAndGeneResolution
+#' @param cia.nf
+#' @param IntNMF.nf
+#' @param genePercentCut
+#' @param imagePercentCut
+#' @param MultimodalMethod
+#' @param WnnImageWeightFactor
+#'
+#' @return
+#' @export
+#'
+#' @examples
 MultimodalImageWorkflowVisium <- function(object, normalizeMethod = "SCT", ImageFeaturePCs = NULL,
                                           pcaDim_s=30, pcaDim_i=30,
                                           geneResolution=0.8, imageFeatureResolution=geneResolution,
@@ -139,6 +160,16 @@ MultimodalImageWorkflowVisium <- function(object, normalizeMethod = "SCT", Image
 }
 
 #### tensorial ICA: tWFOBI and tWJADE
+#' tICA
+#'
+#' @param data
+#' @param dim
+#' @param method
+#'
+#' @return
+#' @export
+#'
+#' @examples
 DoTICA <- function(data,dim,method=c("FOBI","JADE")){
   nt <- dim(data)[1];
   ng <- dim(data)[3];

@@ -1,3 +1,16 @@
+#' extract image features
+#'
+#' @param imgFile
+#' @param positionTable
+#' @param patchSize
+#' @param scaleFactor
+#' @param rawImage
+#' @param savePatchOnImage
+#'
+#' @return
+#' @export
+#'
+#' @examples
 extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor=1, rawImage = FALSE, savePatchOnImage=NULL) {
   suppressMessages(require(tensorflow, warn.conflicts = F, quietly = T))
   suppressMessages(require(keras, warn.conflicts = F, quietly = T))
@@ -49,8 +62,18 @@ extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor
   return(imgPatchFeaturesAll)
 }
 
-
-
+#' extract image features for Visium dataset
+#'
+#' @param spatialDir
+#' @param patchSize
+#' @param rawImage
+#' @param imgFile
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 extract_features_Visium <- function(spatialDir, patchSize=NULL, rawImage = FALSE, imgFile=NULL, ...) {
   suppressMessages(require(rjson, warn.conflicts = F, quietly = T))
 

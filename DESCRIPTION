@@ -5,9 +5,9 @@ Title: R package for integration analysis of spatial transcriptomics and morphol
 Description: A toolkit for integration analysis of spatial transcriptomics data, including gene expression matrix and morphology images. 'stImage' aims to enable users to identify and interpret clusters of spots related to tissue morphology from spatial transcriptomic data. 
 Authors@R: c(
     person(given = "Yu", family = "Wang", email = "yu.wang.2@vumc.org", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2819-4551")),
-    person(given = "Qi", family = "Liu", email = "qi.liu@vumc.org", role = "ctb"),
+    person(given = "Qi", family = "Liu", email = "qi.liu@vumc.org", role = "ctb", comment = c(ORCID = "0000-0001-8892-7078")),
     person(given = "Yu", family = "Shyr", email = "yu.shyr@vumc.org", role = "ctb", comment = c(ORCID= "0000-0003-2086-9670")),
-    person(given = "Shilin", family = "Zhao", email = "shilin.zhao.1@vumc.org", role = "ctb")
+    person(given = "Shilin", family = "Zhao", email = "shilin.zhao.1@vumc.org", role = "ctb", comment = c(ORCID= "0000-0003-2086-9670"))
     )
 URL: https://github.com/YuWang-VUMC/stImage
 BugReports: https://github.com/YuWang-VUMC/stImage/issues

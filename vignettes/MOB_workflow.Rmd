@@ -70,11 +70,6 @@ patchSize=200
 ```
 
 
-```{r load.rds, echo = F, eval = T}
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- readRDS(paste0(workDir, "/", "Adult_Mouse_Olfactory_Bulb_rawimage_object_vignette20220726.rds"))
-```
-
-
 # Extract features
 
 ```{r extract.feature, echo = T, eval = F}
@@ -97,13 +92,20 @@ Adult_Mouse_Olfactory_Bulb_rawimage_obj <- LoadImageFeatureVisium(data_path, fil
 # Data analysis of Spatial matrix and ImageFeature matrix
 
 ```{r data.process, echo = T, eval = F}
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- MultimodalImageWorkflowVisium(Adult_Mouse_Olfactory_Bulb_rawimage_obj, normalizeMethod = "SCT", pcaDim_s=30, pcaDim_i=30, geneResolution=1.05, imageFeatureResolution=2.23, imageAndGeneResolution=1.2, MultimodalMethod = c("WNN", "MCIA", "tICA"))
+Adult_Mouse_Olfactory_Bulb_rawimage_obj <- MultimodalPreProcess(Adult_Mouse_Olfactory_Bulb_rawimage_obj, normalizeMethod = "SCT", pcaDim_s=30, pcaDim_i=30, geneResolution=1.05, imageFeatureResolution=2.23)
+Adult_Mouse_Olfactory_Bulb_rawimage_obj <- MultiModalIntegrationVisium(Adult_Mouse_Olfactory_Bulb_rawimage_obj, pcaDim_s=30, pcaDim_i=30, imageAndGeneResolution=1.2, MultimodalMethod = c("WNN", "MCIA", "tICA"))
 ```
 
 
 ```{r save.rds, echo = T, eval = F}
 saveRDS(Adult_Mouse_Olfactory_Bulb_rawimage_obj, paste0(workDir, "/", proj_folder, "_rawimage_object_vignette", tstamp, ".rds"))
 ```
+
+
+```{r load.rds, echo = F, eval = T}
+Adult_Mouse_Olfactory_Bulb_rawimage_obj <- readRDS(paste0(workDir, "/", "Adult_Mouse_Olfactory_Bulb_rawimage_object_vignette20220726.rds"))
+```
+
 
 
 # Visualization

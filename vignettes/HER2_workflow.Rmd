@@ -1,0 +1,271 @@
+---
+title: "integrate spatial transcriptome and Image with stImage (HER2)"
+output:
+  html_document:
+    theme: united
+    df_print: kable
+  pdf_document: default
+date: 'Compiled: `r Sys.Date()`'
+---
+
+```{r setup, include=FALSE}
+all_times <- list()  # store the time for each chunk
+knitr::knit_hooks$set(time_it = local({
+  now <- NULL
+  function(before, options) {
+    if (before) {
+      now <<- Sys.time()
+    } else {
+      res <- difftime(Sys.time(), now, units = "secs")
+      all_times[[options$label]] <<- res
+    }
+  }
+}))
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10,
+  time_it = TRUE
+)
+```
+
+
+# Overview
+
+```{r install, message = F, warning = F, echo = F}
+library(tidyverse)
+library(Seurat)
+library(stImage)
+library(patchwork)
+library(reticulate)
+use_condaenv(condaenv = "myenv", conda = "/home/wangy67/miniconda3/bin/conda")
+
+```
+
+
+# Prepare input file
+
+```{r define, echo = T, eval = T}
+workDir="/data/cqs/ywang/source/analysis/"
+setwd(workDir)
+tstamp <- gsub("-", "", as.character(Sys.Date()))
+coordinateFile="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/her2st/data/ST-spotfiles/H1_selection.tsv"
+countTableFile="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/her2st/data/ST-cnts/H1.tsv.gz"
+sampleName="HER2.H1"
+
+
+coordinate=read.delim(coordinateFile)
+#Again Please note row name (posTable) are X*Y. the format of output(to match with 10X) position file are row(Y) and col(X)
+positionTable=coordinate[,c(6,5)]
+row.names(positionTable)=paste0("X",coordinate$x,"x",coordinate$y)
+
+
+countTable=read.delim(countTableFile,header=T,row.names=1)
+row.names(countTable)=paste0("X",row.names(countTable))
+
+#patch 200
+imageFeatureFile="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/her2st/H1_patch200_features.csv"
+imageFeatures=read.csv(imageFeatureFile,header=TRUE,row.names=1)
+
+if (identical(sort(row.names(countTable)),sort(row.names(imageFeatures)))) {
+  imageFeatures=imageFeatures[row.names(countTable),]
+  positionTable=positionTable[row.names(countTable),]
+} else {
+  stop("Differenti sample names in countTable and imageFeatures")
+}
+
+```
+
+
+# Extract features
+
+```{r extract.feature, echo = T, eval = F}
+imageFeatures_raw=extract_features(spatial_path, rawImage = T, imgFile = rawimg, savePatchOnImage = paste0(proj_folder, "_rawpatch", "_", tstamp, ".png"))
+
+#write.csv(imageFeatures_raw,paste0(workDir,"/",proj_folder,"_features_raw_",tstamp,".csv"))
+
+```
+
+
+# load Image Feature into Seurat object
+
+
+```{r, eval = F}
+dataObj=LoadImageFeature(countTable = t(countTable),
+              imageFeatures = imageFeatures, positionTable = positionTable, project = sampleName)
+saveRDS(dataObj,paste0(workDir,sampleName,".Patch200.SeuratObj.rds"))
+
+```
+
+
+# Data analysis of Spatial matrix and ImageFeature matrix
+
+```{r, eval = F}
+
+#objDir="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/"
+
+objectRdsName=paste0(workDir,"HER2.H1.Patch200.SeuratObj.rds")
+
+dataObj=readRDS(objectRdsName)
+dataObjProcessed <- MultimodalPreProcess(dataObj,
+                                         normalizeMethod = "SCT",
+                                         geneResolution=1.4,
+                                         imageFeatureResolution = 1.1)
+dataObjProcessed <- MultiModalIntegrationVisium(dataObj,,
+                                                imageAndGeneResolution=1,
+                                                imagePercentCut=0.1)
+saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rds"))
+
+```
+
+
+
+# plot
+
+```{r}
+
+workDir="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/"
+objectRdsName="HER2.H1.Patch200.SeuratObj.rds"
+
+dataObjProcessed <- readRDS(paste0(workDir,basename(objectRdsName), ".processed.rds"))
+# 
+```
+
+
+## DimPlot
+
+```{r, fig.dim = c(12, 4)}
+
+geneClusterName=grep("SCT_snn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
+imageClusterName=grep("ImageFeature_snn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
+integratedClusterName=grep("wsnn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
+
+p1 <- DimPlot(dataObjProcessed, reduction = 'st.umap', group.by = geneClusterName, label = TRUE, 
+              repel = TRUE, label.size = 2.5) + NoLegend()
+p2 <- DimPlot(dataObjProcessed, reduction = 'if.umap', group.by =imageClusterName, label = TRUE, 
+              repel = TRUE, label.size = 2.5) + NoLegend()
+p3 <- DimPlot(dataObjProcessed, reduction = 'wnn.umap', group.by =integratedClusterName, label = TRUE, repel = TRUE, label.size = 2.5) + NoLegend()
+
+p1 + p2 + p3
+
+```
+
+### SpatialDimPlot
+
+```{r, fig.dim = c(12, 4)}
+
+DefaultAssay(dataObjProcessed) <- "Spatial"
+p4 <- SpatialDimPlot(dataObjProcessed, group.by = geneClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+#+ NoLegend()
+
+DefaultAssay(dataObjProcessed) <- "ImageFeature"
+p5 <- SpatialDimPlot(dataObjProcessed, group.by = imageClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+#+ NoLegend()
+
+p6 <- SpatialDimPlot(dataObjProcessed, group.by=integratedClusterName, label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+#+ NoLegend()
+
+p4 + p5 + p6
+#p4+p6
+
+```
+
+### Weight of SCT and ImageFeature
+
+```{r, fig.dim = c(8, 4)}
+
+p7 <- VlnPlot(dataObjProcessed, features = "SCT.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
+  NoLegend()
+p8 <- VlnPlot(dataObjProcessed, features = "ImageFeature.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
+  NoLegend()
+p7 + p8
+
+```
+
+# Test SpatialPCA for gene expression data and image feature seperately
+
+```{r}
+
+library(SpatialPCA)
+library(ggplot2)
+
+SpatialPCAWorkflow=function(SpatialPCAObj,SpatialPCnum=20) {
+  SpatialPCAObjProcessed = SpatialPCA_buildKernel(SpatialPCAObj, kerneltype="gaussian", bandwidthtype="SJ")
+  SpatialPCAObjProcessed = SpatialPCA_EstimateLoading(SpatialPCAObjProcessed,fast=FALSE,SpatialPCnum=SpatialPCnum)
+  SpatialPCAObjProcessed = SpatialPCA_SpatialPCs(SpatialPCAObjProcessed, fast=FALSE)
+
+  return(SpatialPCAObjProcessed)
+  
+  #clusterlabel= walktrap_clustering(7, SpatialPCAObjProcessed@SpatialPCs,round(sqrt(dim(SpatialPCAObjProcessed@location)[1])))
+  #clusterlabel_refine=refine_cluster_10x(clusterlabel,SpatialPCAObjProcessed@location,shape="square")
+  
+}
+
+#to SpatialPCA object
+makeSpatialPCAObj=function(dataObjProcessed) {
+  rawcount=dataObjProcessed@assays[["Spatial"]]@counts
+  location=as.matrix(dataObjProcessed@images$images@coordinates)
+  STGene = CreateSpatialPCAObject(counts=rawcount, location=location, 
+                              project = dataObjProcessed@project.name,gene.type="spatial",
+                              sparkversion="spark", gene.number=3000,
+                              customGenelist=NULL,min.loctions = 20, min.features=20)
+  
+  imageFeaturesNormlized=dataObjProcessed@assays[["ImageFeature"]]@data
+  STImage = CreateSpatialPCAObject(counts=imageFeaturesNormlized, location=location, 
+                              project = dataObjProcessed@project.name,gene.type="custom",
+                              customGenelist=row.names(imageFeaturesNormlized),min.loctions = 20, min.features=20)
+  
+  STGeneProcessed=SpatialPCAWorkflow(STGene)
+  STImageProcessed=SpatialPCAWorkflow(STImage)
+  dataObjProcessed[["pca"]] <- CreateDimReducObject(embeddings = t(STGeneProcessed@SpatialPCs),
+                                            loadings = STGeneProcessed@W,
+                                            key = "PC_", assay = DefaultAssay(object))
+  
+  temp1=t(STGeneProcessed@SpatialPCs)
+  colnames(temp1)=paste0("PC",1:ncol(temp1))
+  temp2=t(STImageProcessed@SpatialPCs)
+  colnames(temp2)=paste0("PC",1:ncol(temp2))
+
+  dataObjProcessedSpatialPCA=dataObjProcessed
+  dataObjProcessedSpatialPCA[["GeneSpatialPCA"]] <- 
+    CreateDimReducObject(embeddings = temp1, key = "GeneSpatial_", assay = "Spatial")
+  dataObjProcessedSpatialPCA[["ImageSpatialPCA"]] <- 
+    CreateDimReducObject(embeddings = temp2, key = "ImageSpatial_", assay = "ImageFeature")
+  
+  dataObjProcessedSpatialPCA <- FindMultiModalNeighbors(
+      dataObjProcessedSpatialPCA, reduction.list = list("GeneSpatialPCA", "ImageSpatialPCA"), 
+      dims.list = list(1:20, 1:20),
+      modality.weight.name = c("SCT.weight","ImageFeature.weight"),
+      return.intermediate = TRUE)
+  dataObjProcessedSpatialPCA <- FindClusters(dataObjProcessedSpatialPCA, graph.name = "wsnn", algorithm = 3,resolution = 0.9, verbose = FALSE)
+  dataObjProcessedSpatialPCA <- RunUMAP(dataObjProcessedSpatialPCA, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
+    
+}
+
+dataObjProcessedSpatialPCA <- makeSpatialPCAObj(dataObjProcessed)
+
+DefaultAssay(dataObjProcessedSpatialPCA) <- "Spatial"
+p9 <- SpatialDimPlot(dataObjProcessedSpatialPCA, group.by = geneClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+#+ NoLegend()
+
+DefaultAssay(dataObjProcessedSpatialPCA) <- "ImageFeature"
+p10 <- SpatialDimPlot(dataObjProcessedSpatialPCA, group.by = imageClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+#+ NoLegend()
+
+p11 <- SpatialDimPlot(dataObjProcessed, group.by=integratedClusterName, label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+#+ NoLegend()
+
+p9 + p10 + p11
+
+
+
+
+```
+
+
+
+
+
+

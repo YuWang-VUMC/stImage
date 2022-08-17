@@ -1,0 +1,165 @@
+---
+title: "integrate spatial transcriptome and Image with stImage (HER2)"
+output:
+  html_document:
+    theme: united
+    df_print: kable
+  pdf_document: default
+date: 'Compiled: `r Sys.Date()`'
+---
+
+```{r setup, include=FALSE}
+all_times <- list()  # store the time for each chunk
+knitr::knit_hooks$set(time_it = local({
+  now <- NULL
+  function(before, options) {
+    if (before) {
+      now <<- Sys.time()
+    } else {
+      res <- difftime(Sys.time(), now, units = "secs")
+      all_times[[options$label]] <<- res
+    }
+  }
+}))
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10,
+  time_it = TRUE
+)
+```
+
+
+# Overview
+
+```{r install, message = F, warning = F, echo = F}
+
+library(tidyverse)
+library(Seurat)
+#devtools::load_all()
+
+```
+
+
+# Prepare input object
+
+```{r define, echo = T, eval = T}
+
+library(SeuratData)
+dataObj <- LoadData("stxBrain", type = "anterior1")
+dataObj <- SCTransform(dataObj, assay = "Spatial", verbose = FALSE)
+dataObj <- RunPCA(dataObj, assay = "SCT", verbose = FALSE)
+
+#dataObj@reductions$pca
+
+```
+
+
+## Distance of spots based on PCA of iamge features
+
+```{r}
+
+
+
+library(lsa)
+nPCs=50
+
+imageFeaturePCs=t(dataObj@reductions$pca@cell.embeddings[,1:nPCs])
+
+# set.seed(123)
+# imageFeaturePCs=matrix(rnorm(nPCs*2000),nrow=2000,ncol=nPCs)
+# colnames(imageFeaturePCs)=paste0("PC",1:nPCs)
+# row.names(imageFeaturePCs)=paste0("Spot",1:2000)
+# imageFeaturePCs=t(imageFeaturePCs)
+
+distanceMethod=c("cosine")
+#distanceMethod=c("euclidean")
+if (distanceMethod=="cosine") {
+  spotsImageSimilarity=lsa::cosine(imageFeaturePCs)
+} else if (distanceMethod=="euclidean") {
+  spotsImageSimilarity=1-dist(imageFeaturePCs)
+}
+
+spotsImageSimilarity[spotsImageSimilarity<0]=0
+
+```
+
+
+## Location distance of spots based on BayeSpace R codes
+
+```{r}
+
+#head(dataObj@images[[1]]@coordinates)
+spotsCoordinate=dataObj@images[[1]]@coordinates[,c(4:5)]
+
+
+find_coordinate_neighbor=function(spotsCoordinate,n=6) {
+  
+  spotToNeighborList=list()
+  for (i in 1:nrow(spotsCoordinate)) {
+    distI=(spotsCoordinate[,1]-spotsCoordinate[i,1])^2+
+      (spotsCoordinate[,2]-spotsCoordinate[i,2])^2
+    neighborIndI=which(rank(distI)<=(n+1) & rank(distI)!=1) #not self
+    spotToNeighborList[[i]]=row.names(spotsCoordinate)[neighborIndI]
+  }
+  names(spotToNeighborList)=row.names(spotsCoordinate)
+  return(spotToNeighborList)
+}
+
+spotToNeighborList=find_coordinate_neighbor(spotsCoordinate)
+
+#spotToNeighborList[1:3]
+
+```
+
+
+## Normlization
+
+```{r}
+
+geneExp = (dataObj@assays$SCT@data)
+
+
+
+extract_geneExp_ByNeighbor = function(geneExp,spotToNeighborList,spotsImageSimilarity) {
+  geneExpByNeighbor = matrix(NA, ncol = ncol(geneExp), nrow = nrow(geneExp))
+  colnames(geneExpByNeighbor) = colnames(geneExp)
+  row.names(geneExpByNeighbor) = row.names(geneExp)
+  
+  for (spotName in colnames(geneExpByNeighbor)) {
+    #spotName="AAACAAGTATCTCCCA-1"
+    spotNeighborNames = spotToNeighborList[[spotName]]
+    
+    spotNeighborSimilarity = spotsImageSimilarity[spotName, spotNeighborNames]
+    spotNeighborSimilaritySum = sum(spotNeighborSimilarity)
+    
+    if (spotNeighborSimilaritySum > 0) {
+      spotNeighborSimilarityPropotion = spotNeighborSimilarity / spotNeighborSimilaritySum
+      spotNeighborGeneExpBySimilarity = sweep(geneExp[, spotNeighborNames], 2, spotNeighborSimilarityPropotion, "*")
+      geneExpByNeighbor[, spotName] = rowSums(spotNeighborGeneExpBySimilarity)
+    }
+  }
+  
+  return(geneExpByNeighbor)
+  
+}
+
+
+#this is slow
+geneExpByNeighbor=extract_geneExp_ByNeighbor(geneExp,spotToNeighborList,spotsImageSimilarity)
+
+
+
+
+```
+
+
+
+
+
+
+
+
+

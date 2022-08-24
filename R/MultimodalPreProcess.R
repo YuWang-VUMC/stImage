@@ -20,7 +20,7 @@ MultimodalPreProcess <- function(object, GeneFeaturePCobj = NULL, ImageFeaturePC
                                  pcaDim_s=30, pcaDim_i=30,
                                  genePercentCut=0.1, imagePercentCut=0.3,
                                  geneResolution=0.8, imageFeatureResolution=geneResolution){
-  if(is.null(GeneFeaturePCs)) {
+  if(is.null(GeneFeaturePCobj)) {
     # analyze spatial matrix
     DefaultAssay(object) <- "Spatial"
     #rawcount <- object[[assay]]@counts
@@ -60,7 +60,7 @@ MultimodalPreProcess <- function(object, GeneFeaturePCobj = NULL, ImageFeaturePC
                       assay = assay, reduction.name = 'st.umap', reduction.key = 'stUMAP_')
   }
 
-  if(is.null(ImageFeaturePCs)) {
+  if(is.null(ImageFeaturePCobj)) {
     # analyze imagefeature matrix
     DefaultAssay(object) <- "ImageFeature"
     VariableFeatures(object) <- rownames(object[["ImageFeature"]])

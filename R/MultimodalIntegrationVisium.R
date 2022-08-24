@@ -16,6 +16,7 @@
 #'
 #' @examples
 MultiModalIntegrationVisium <- function(object,
+                                        normalizeMethod = c("SCT", "log"),
                                         pcaDim_s=30, pcaDim_i=30,
                                         imageAndGeneResolution=0.8,
                                         cia.nf = 20, IntNMF.nf = 20,

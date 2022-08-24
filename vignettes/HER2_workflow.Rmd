@@ -113,7 +113,8 @@ dataObjProcessed <- MultimodalPreProcess(dataObj,
                                          normalizeMethod = "SCT",
                                          geneResolution=1.4,
                                          imageFeatureResolution = 1.1)
-dataObjProcessed <- MultiModalIntegrationVisium(dataObj,,
+dataObjProcessed <- MultiModalIntegrationVisium(dataObj,
+                                                normalizeMethod = "SCT",
                                                 imageAndGeneResolution=1,
                                                 imagePercentCut=0.1)
 saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rds"))

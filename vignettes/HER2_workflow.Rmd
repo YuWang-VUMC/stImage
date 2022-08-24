@@ -55,7 +55,7 @@ coordinateFile="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/her2st/da
 countTableFile="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/her2st/data/ST-cnts/H1.tsv.gz"
 sampleName="HER2.H1"
 
-
+rawimg <- "/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/her2st/H1_patch200_image.png"
 coordinate=read.delim(coordinateFile)
 #Again Please note row name (posTable) are X*Y. the format of output(to match with 10X) position file are row(Y) and col(X)
 positionTable=coordinate[,c(6,5)]
@@ -82,7 +82,8 @@ if (identical(sort(row.names(countTable)),sort(row.names(imageFeatures)))) {
 # Extract features
 
 ```{r extract.feature, echo = T, eval = F}
-imageFeatures_raw=extract_features(spatial_path, rawImage = T, imgFile = rawimg, savePatchOnImage = paste0(proj_folder, "_rawpatch", "_", tstamp, ".png"))
+#need check the scaleFactor
+imageFeatures_raw=extract_features(imgFile = rawimg, positionTable = positionTable, patchSize = 200, rawImage = F, savePatchOnImage = paste0(proj_folder, "_rawpatch", "_", tstamp, ".png"))
 
 #write.csv(imageFeatures_raw,paste0(workDir,"/",proj_folder,"_features_raw_",tstamp,".csv"))
 
@@ -112,11 +113,12 @@ dataObj=readRDS(objectRdsName)
 dataObjProcessed <- MultimodalPreProcess(dataObj,
                                          normalizeMethod = "SCT",
                                          geneResolution=1.4,
-                                         imageFeatureResolution = 1.1)
-dataObjProcessed <- MultiModalIntegrationVisium(dataObj,
+                                         imageFeatureResolution = 1.1,
+                                         imagePercentCut=0.1)
+dataObjProcessed <- MultiModalIntegrationVisium(dataObjProcessed,
                                                 normalizeMethod = "SCT",
                                                 imageAndGeneResolution=1,
-                                                imagePercentCut=0.1)
+                                                MultimodalMethod = "WNN")
 saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rds"))
 
 ```
@@ -127,7 +129,7 @@ saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rd
 
 ```{r}
 
-workDir="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/"
+#workDir="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/"
 objectRdsName="HER2.H1.Patch200.SeuratObj.rds"
 
 dataObjProcessed <- readRDS(paste0(workDir,basename(objectRdsName), ".processed.rds"))
@@ -185,17 +187,77 @@ p7 + p8
 
 ```
 
-# Test SpatialPCA for gene expression data and image feature seperately
+### ARI with pathologist review region
 
 ```{r}
+library(clues)
+#pathologist review region
+reviewRegions=read.delim("/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/her2st/data/ST-pat/lbl/H1_labeled_coordinates.tsv")
+temp1=order(dataObjProcessed@images$images@coordinates$pixel_y,dataObjProcessed@images$images@coordinates$pixel_x)
+#head(positionTable[temp1,])
+temp2=order(reviewRegions$y,reviewRegions$x)
+#head(reviewRegions[temp2,])
+dataObjProcessed@meta.data$TrueLabel=NA
+dataObjProcessed@meta.data$TrueLabel[temp1]=reviewRegions$label[temp2]
+#visulization of review regions
+SpatialDimPlot(dataObjProcessed, group.by = "TrueLabel", label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10) 
+p6
+predictedCluster=as.character(dataObjProcessed@meta.data$"wsnn_res.1")
+table(dataObjProcessed@meta.data$"wsnn_res.1",dataObjProcessed@meta.data$TrueLabel)
+table(predictedCluster,dataObjProcessed@meta.data$TrueLabel)
+predictedCluster[predictedCluster==0]="adipose tissue"
+predictedCluster[predictedCluster==1]="connective tissue"
+predictedCluster[predictedCluster==2]="connective tissue"
+predictedCluster[predictedCluster==3]="cancer in situ"
+predictedCluster[predictedCluster==4]="invasive cancer"
+predictedCluster[predictedCluster==5]="immune infiltrate"
+predictedCluster[predictedCluster==6]="breast glands"
+trueLabel=dataObjProcessed@meta.data$TrueLabel
+naInd=which(trueLabel=="undetermined")
+    adjustedRand(
+      as.integer(as.factor(predictedCluster[-naInd])),
+      as.integer(as.factor(trueLabel[-naInd])),
+      randMethod="HA"
+    )
+#0.5768265  
+```
+
+
+```{r, eval = F}
+    
+library(nnet)
+library(DescTools)
+PseudoR2Result=NULL 
+for (i in c(1:20)) {
+  #fit mutinorm regression model to get PseudoR2
+temp=cbind(dataObjProcessed@reductions$ipca@cell.embeddings[-naInd,1:i],
+                                                  dataObjProcessed@reductions$pca@cell.embeddings[-naInd,1:i])
+modelResult <- multinom(trueLabel[-naInd] ~ temp, maxit = 1000, MaxNWts = 2000,model = TRUE)
+PseudoR2Result=c(PseudoR2Result,PseudoR2(modelResult,c("McFaddenAdj")))
+}
+names(PseudoR2Result)=1:20
+plot(PseudoR2Result,type="b")
+max(PseudoR2Result)
+#0.7390224
+#marker gene expression
+selectedGenes=c("DDX54", "TRAF2")
+VlnPlot(dataObjProcessed, features = selectedGenes,assay = "SCT")
+DotPlot(dataObjProcessed, features = selectedGenes,assay = "SCT")
+		
+```
+
+
+# Test SpatialPCA for gene expression data and image feature seperately
+
+```{r, fig.dim = c(12, 4), warning = F, echo = F}
 
 library(SpatialPCA)
 library(ggplot2)
 
-SpatialPCAWorkflow=function(SpatialPCAObj,SpatialPCnum=20) {
-  SpatialPCAObjProcessed = SpatialPCA_buildKernel(SpatialPCAObj, kerneltype="gaussian", bandwidthtype="SJ")
-  SpatialPCAObjProcessed = SpatialPCA_EstimateLoading(SpatialPCAObjProcessed,fast=FALSE,SpatialPCnum=SpatialPCnum)
-  SpatialPCAObjProcessed = SpatialPCA_SpatialPCs(SpatialPCAObjProcessed, fast=FALSE)
+SpatialPCAWorkflow <- function(SpatialPCAObj,SpatialPCnum = 30) {
+  SpatialPCAObjProcessed <- SpatialPCA_buildKernel(SpatialPCAObj, kerneltype = "gaussian", bandwidthtype = "SJ")
+  SpatialPCAObjProcessed <- SpatialPCA_EstimateLoading(SpatialPCAObjProcessed, fast = FALSE, SpatialPCnum = SpatialPCnum)
+  SpatialPCAObjProcessed <- SpatialPCA_SpatialPCs(SpatialPCAObjProcessed, fast = FALSE)
 
   return(SpatialPCAObjProcessed)
   
@@ -205,68 +267,117 @@ SpatialPCAWorkflow=function(SpatialPCAObj,SpatialPCnum=20) {
 }
 
 #to SpatialPCA object
-makeSpatialPCAObj=function(dataObjProcessed) {
-  rawcount=dataObjProcessed@assays[["Spatial"]]@counts
-  location=as.matrix(dataObjProcessed@images$images@coordinates)
-  STGene = CreateSpatialPCAObject(counts=rawcount, location=location, 
-                              project = dataObjProcessed@project.name,gene.type="spatial",
-                              sparkversion="spark", gene.number=3000,
-                              customGenelist=NULL,min.loctions = 20, min.features=20)
+makeSpatialPCAObj <- function(dataObjProcessed, 
+                              geneResolution=0.8, 
+                              imageFeatureResolution=geneResolution, 
+                              imageAndGeneResolution=0.8) {
+  rawcount <- dataObjProcessed@assays[["Spatial"]]@counts
+  location <- as.matrix(dataObjProcessed@images$images@coordinates)
+  STGene <- CreateSpatialPCAObject(counts = rawcount, location = location, 
+                                   project = dataObjProcessed@project.name, gene.type = "spatial", 
+                                   sparkversion = "spark", gene.number = 3000,
+                                   customGenelist = NULL, min.loctions = 30, min.features = 30)
   
-  imageFeaturesNormlized=dataObjProcessed@assays[["ImageFeature"]]@data
-  STImage = CreateSpatialPCAObject(counts=imageFeaturesNormlized, location=location, 
-                              project = dataObjProcessed@project.name,gene.type="custom",
-                              customGenelist=row.names(imageFeaturesNormlized),min.loctions = 20, min.features=20)
+  imageFeaturesNormlized <- dataObjProcessed@assays[["ImageFeature"]]@data
+  STImage <- CreateSpatialPCAObject(counts = imageFeaturesNormlized, location = location, 
+                              project = dataObjProcessed@project.name, gene.type="custom",
+                              customGenelist = row.names(imageFeaturesNormlized), min.loctions = 30, min.features = 30)
   
-  STGeneProcessed=SpatialPCAWorkflow(STGene)
-  STImageProcessed=SpatialPCAWorkflow(STImage)
-  dataObjProcessed[["pca"]] <- CreateDimReducObject(embeddings = t(STGeneProcessed@SpatialPCs),
-                                            loadings = STGeneProcessed@W,
-                                            key = "PC_", assay = DefaultAssay(object))
+  STGeneProcessed <- SpatialPCAWorkflow(STGene)
+  STImageProcessed <- SpatialPCAWorkflow(STImage)
+  #dataObjProcessed[["pca"]] <- CreateDimReducObject(embeddings = t(STGeneProcessed@SpatialPCs),
+  #                                          loadings = STGeneProcessed@W,
+  #                                          key = "PC_", assay = DefaultAssay(object))
   
-  temp1=t(STGeneProcessed@SpatialPCs)
-  colnames(temp1)=paste0("PC",1:ncol(temp1))
-  temp2=t(STImageProcessed@SpatialPCs)
-  colnames(temp2)=paste0("PC",1:ncol(temp2))
+  temp1 <- t(STGeneProcessed@SpatialPCs)
+  colnames(temp1) <- paste0("PC",1:ncol(temp1))
+  temp2 <- t(STImageProcessed@SpatialPCs)
+  colnames(temp2) <- paste0("PC",1:ncol(temp2))
 
-  dataObjProcessedSpatialPCA=dataObjProcessed
-  dataObjProcessedSpatialPCA[["GeneSpatialPCA"]] <- 
-    CreateDimReducObject(embeddings = temp1, key = "GeneSpatial_", assay = "Spatial")
-  dataObjProcessedSpatialPCA[["ImageSpatialPCA"]] <- 
-    CreateDimReducObject(embeddings = temp2, key = "ImageSpatial_", assay = "ImageFeature")
+  dataObjProcessedSpatialPCA <- dataObjProcessed
+  dataObjProcessedSpatialPCA[["GeneSpatialPCA"]] <- CreateDimReducObject(embeddings = temp1, key = "GeneSpatial_", assay = "Spatial")
+  dataObjProcessedSpatialPCA <- FindNeighbors(dataObjProcessedSpatialPCA, reduction = "GeneSpatialPCA", graph.name = c("st_spca_nn", "st_spca_snn"), dims = 1:ncol(temp1))
+  dataObjProcessedSpatialPCA <- FindClusters(dataObjProcessedSpatialPCA, verbose = FALSE, graph.name = "st_spca_snn", resolution = geneResolution)
+  dataObjProcessedSpatialPCA <- RunUMAP(dataObjProcessedSpatialPCA, reduction = 'GeneSpatialPCA', dims = 1:ncol(temp1), 
+                                        assay = "Spatial", reduction.name = 'st.spca.umap', reduction.key = 'stspcaUMAP_')
+  dataObjProcessedSpatialPCA[["ImageSpatialPCA"]] <- CreateDimReducObject(embeddings = temp2, key = "ImageSpatial_", assay = "ImageFeature")
+  dataObjProcessedSpatialPCA <- FindNeighbors(dataObjProcessedSpatialPCA, reduction = "ImageSpatialPCA", graph.name = c("if_spca_nn", "if_spca_snn"), dims = 1:ncol(temp2))
+  dataObjProcessedSpatialPCA <- FindClusters(dataObjProcessedSpatialPCA, verbose = FALSE, graph.name = "if_spca_snn", resolution = imageFeatureResolution)
+  dataObjProcessedSpatialPCA <- RunUMAP(dataObjProcessedSpatialPCA, reduction = 'ImageSpatialPCA', dims = 1:ncol(temp2), 
+                                        assay = "ImageFeature", reduction.name = 'if.spca.umap', reduction.key = 'ifspcaUMAP_')
   
   dataObjProcessedSpatialPCA <- FindMultiModalNeighbors(
       dataObjProcessedSpatialPCA, reduction.list = list("GeneSpatialPCA", "ImageSpatialPCA"), 
-      dims.list = list(1:20, 1:20),
-      modality.weight.name = c("SCT.weight","ImageFeature.weight"),
+      dims.list = list(1:ncol(temp1), 1:ncol(temp2)),
+      knn.graph.name = "spca_wknn", snn.graph.name = "spca_wsnn", weighted.nn.name = "spca.weighted.nn",
+      modality.weight.name = c("SCT.spca.weight","ImageFeature.spca.weight"),
       return.intermediate = TRUE)
-  dataObjProcessedSpatialPCA <- FindClusters(dataObjProcessedSpatialPCA, graph.name = "wsnn", algorithm = 3,resolution = 0.9, verbose = FALSE)
-  dataObjProcessedSpatialPCA <- RunUMAP(dataObjProcessedSpatialPCA, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
+  dataObjProcessedSpatialPCA <- FindClusters(dataObjProcessedSpatialPCA, graph.name = "spca_wsnn", algorithm = 3, resolution = imageAndGeneResolution, verbose = FALSE)
+  dataObjProcessedSpatialPCA <- RunUMAP(dataObjProcessedSpatialPCA, nn.name = "spca.weighted.nn", reduction.name = "spca.wnn.umap", reduction.key = "spcawnnUMAP_")
     
 }
 
-dataObjProcessedSpatialPCA <- makeSpatialPCAObj(dataObjProcessed)
+geneResolution=1.4
+imageFeatureResolution=1.1
+imageAndGeneResolution=1
+
+dataObjProcessedSpatialPCA <- makeSpatialPCAObj(dataObjProcessed, geneResolution=1.4, imageFeatureResolution=1.1, imageAndGeneResolution=1)
 
 DefaultAssay(dataObjProcessedSpatialPCA) <- "Spatial"
-p9 <- SpatialDimPlot(dataObjProcessedSpatialPCA, group.by = geneClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+p9 <- SpatialDimPlot(dataObjProcessedSpatialPCA, group.by = paste0("st_spca_snn_res.", geneResolution), label = TRUE, label.box = F, label.size = 2, pt.size.factor = 10) 
 #+ NoLegend()
 
 DefaultAssay(dataObjProcessedSpatialPCA) <- "ImageFeature"
-p10 <- SpatialDimPlot(dataObjProcessedSpatialPCA, group.by = imageClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+p10 <- SpatialDimPlot(dataObjProcessedSpatialPCA, group.by = paste0("if_spca_snn_res.", imageFeatureResolution), label = TRUE, label.box = F, label.size = 2, pt.size.factor = 10) 
 #+ NoLegend()
 
-p11 <- SpatialDimPlot(dataObjProcessed, group.by=integratedClusterName, label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+p11 <- SpatialDimPlot(dataObjProcessedSpatialPCA, group.by= paste0("spca_wsnn_res.", imageAndGeneResolution), label = TRUE, label.box = F, repel = TRUE, label.size = 2, pt.size.factor = 10)
 #+ NoLegend()
 
 p9 + p10 + p11
 
 
+```
 
-
+```{r, eval = F}
+CairoPDF("HER2.H1_SpatialPCA_SpatialDimPlots.pdf", width = 12, height = 6, onefile = T)
+p9 + p10 + p11 + plot_layout(ncol = 3)
+dev.off()
 ```
 
 
+### ARI with pathologist review region for SpatialPCA
 
+
+```{r, warning = F, echo = T}
+temp1=order(dataObjProcessedSpatialPCA@images$images@coordinates$pixel_y,dataObjProcessedSpatialPCA@images$images@coordinates$pixel_x)
+#head(positionTable[temp1,])
+temp2=order(reviewRegions$y,reviewRegions$x)
+#head(reviewRegions[temp2,])
+dataObjProcessedSpatialPCA@meta.data$TrueLabel=NA
+dataObjProcessedSpatialPCA@meta.data$TrueLabel[temp1]=reviewRegions$label[temp2]
+
+predictedCluster=as.character(dataObjProcessedSpatialPCA@meta.data$"spca_wsnn_res.1")
+table(dataObjProcessedSpatialPCA@meta.data$"spca_wsnn_res.1",dataObjProcessedSpatialPCA@meta.data$TrueLabel)
+table(predictedCluster,dataObjProcessedSpatialPCA@meta.data$TrueLabel)
+predictedCluster[predictedCluster==0]="connective tissue"
+predictedCluster[predictedCluster==1]="cancer in situ"
+predictedCluster[predictedCluster==2]="invasive cancer"
+predictedCluster[predictedCluster==3]="immune infiltrate"
+predictedCluster[predictedCluster==4]="adipose tissue"
+predictedCluster[predictedCluster==5]="adipose tissue"
+predictedCluster[predictedCluster==6]="breast glands"
+trueLabel=dataObjProcessedSpatialPCA@meta.data$TrueLabel
+naInd=which(trueLabel=="undetermined")
+    adjustedRand(
+      as.integer(as.factor(predictedCluster[-naInd])),
+      as.integer(as.factor(trueLabel[-naInd])),
+      randMethod="HA"
+    )
+#0.65139
+
+
+```
 
 
 

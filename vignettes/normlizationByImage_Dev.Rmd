@@ -122,7 +122,6 @@ spotToNeighborList=find_coordinate_neighbor(spotsCoordinate)
 geneExp = (dataObj@assays$SCT@data)
 
 
-
 extract_geneExp_ByNeighbor = function(geneExp,spotToNeighborList,spotsImageSimilarity) {
   geneExpByNeighbor = matrix(NA, ncol = ncol(geneExp), nrow = nrow(geneExp))
   colnames(geneExpByNeighbor) = colnames(geneExp)

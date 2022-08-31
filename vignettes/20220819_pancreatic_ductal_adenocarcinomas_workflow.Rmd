@@ -32,14 +32,14 @@ setwd(workDir)
 objDir="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/"
 projDir <- "/scratch/cqs/zhaos/Spatial/data/pancreatic_ductal_adenocarcinomas/"
 
-setwd(projDir)
+#setwd(projDir)
 
 positionTableFile="GSM3405534_PDAC-B-ST1-HE.jpg.position.tsv"
 countTableFile="GSM3405534_PDAC-B-ST1-filtered.txt.Reformated.tsv"
 sampleName="PDAC-B"
 
-countTable=read.delim(countTableFile,header=T,row.names=1)
-positionTable=read.delim(positionTableFile,header=FALSE,row.names=1)
+countTable=read.delim(paste0(projDir, countTableFile),header=T,row.names=1)
+positionTable=read.delim(paste0(projDir, positionTableFile),header=FALSE,row.names=1)
 positionTable=positionTable[which(positionTable[,1]==1),]
 positionTable=positionTable[,c(4:5)] #only need ImageY and ImageX
 
@@ -50,7 +50,7 @@ dataObj=LoadImageFeature(countTable = countTable,
 saveRDS(dataObj,paste0(objDir,sampleName,".Patch600.SeuratObj.rds"))
 
 imageFeatureFile="PDAC-B-ST1_patch400_features.csv"
-imageFeatures=read.csv(paste(projDir, imageFeatureFile, sep = "/"),header=TRUE,row.names=1)
+imageFeatures=read.csv(paste0(projDir, imageFeatureFile),header=TRUE,row.names=1)
 PDAC_B_dataObj=LoadImageFeature(countTable = t(countTable),
               imageFeatures = imageFeatures, positionTable = positionTable, by_Feature = FALSE, project = sampleName)
 saveRDS(PDAC_B_dataObj,paste0(workDir,sampleName,".Patch400.SeuratObj.rds"))
@@ -98,17 +98,43 @@ saveRDS(PDAC_A_dataObj,paste0(workDir,sampleName,".Patch400.SeuratObj.rds"))
 objectRdsName="/data/cqs/ywang/source/analysis/PDAC-B.Patch400.SeuratObj.rds"
 #objectRdsName="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/PDAC-B.Patch200.SeuratObj.rds"
 
-dataObj=readRDS(objectRdsName)
-dataObjProcessed <- MultimodalPreProcess(dataObj,
+PDACB_dataObj=readRDS(objectRdsName)
+PDACB_dataObjProcessed <- MultimodalPreProcess(PDACB_dataObj,
                                          normalizeMethod = "SCT",
-                                         geneResolution=1.4,
-                                         imageFeatureResolution = 1.1,
+                                         DimReducMethod = "PCA",
+                                         geneResolution=0.9,
+                                         imageFeatureResolution = 0.8,
                                          imagePercentCut=0.2)
-dataObjProcessed <- MultiModalIntegrationVisium(dataObjProcessed, 
+PDACB_dataObjProcessed <- MultiModalIntegrationVisium(PDACB_dataObjProcessed, 
                                                 normalizeMethod = "SCT",
-                                                imageAndGeneResolution=1,
+                                                DimReducMethod = "PCA",
+                                                imageAndGeneResolution=0.4,
                                                 MultimodalMethod = "WNN")
-saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rds"))
+saveRDS(PDACB_dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rds"))
+
+```
+
+
+```{r, eval = F}
+
+#objDir="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/"
+#objectRdsName="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/PDAC-B.Patch600.SeuratObj.rds"
+objectRdsName="/data/cqs/ywang/source/analysis/PDAC-B.Patch400.SeuratObj.rds"
+#objectRdsName="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/PDAC-B.Patch200.SeuratObj.rds"
+
+PDACB_dataObj=readRDS(objectRdsName)
+PDACB_SPCA_dataObjProcessed <- MultimodalPreProcess(PDACB_dataObj,
+                                         normalizeMethod = "SCT",
+                                         DimReducMethod = "SpatialPCA",
+                                         geneResolution=0.8,
+                                         imageFeatureResolution = 0.8,
+                                         imagePercentCut=0.2)
+PDACB_SPCA_dataObjProcessed <- MultiModalIntegrationVisium(PDACB_SPCA_dataObjProcessed, 
+                                                normalizeMethod = "SCT",
+                                                DimReducMethod = "SpatialPCA",
+                                                imageAndGeneResolution=0.3,
+                                                MultimodalMethod = "WNN")
+saveRDS(PDACB_SPCA_dataObjProcessed, paste0(workDir,basename(objectRdsName), ".SPCA.processed.rds"))
 
 ```
 
@@ -120,17 +146,17 @@ saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rd
 objectRdsName="/data/cqs/ywang/source/analysis/PDAC-A.Patch400.SeuratObj.rds"
 #objectRdsName="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/PDAC-B.Patch200.SeuratObj.rds"
 
-dataObj=readRDS(objectRdsName)
-dataObjProcessed <- MultimodalPreProcess(dataObj,
+PDACA_dataObj=readRDS(objectRdsName)
+PDACA_dataObjProcessed <- MultimodalPreProcess(PDACA_dataObj,
                                          normalizeMethod = "SCT",
                                          geneResolution=1.4,
                                          imageFeatureResolution = 1.1,
                                          imagePercentCut=0.2)
-dataObjProcessed <- MultiModalIntegrationVisium(dataObjProcessed, 
+PDACA_dataObjProcessed <- MultiModalIntegrationVisium(PDACA_dataObjProcessed, 
                                                 normalizeMethod = "SCT",
                                                 imageAndGeneResolution=1,
                                                 MultimodalMethod = "WNN")
-saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rds"))
+saveRDS(PDACA_dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rds"))
 
 ```
 
@@ -141,9 +167,11 @@ saveRDS(dataObjProcessed, paste0(workDir,basename(objectRdsName), ".processed.rd
 ```{r}
 
 #workDir="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/"
-objectRdsName="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/PDAC-B.Patch400.SeuratObj.rds"
+PDACB_objectRdsName="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/PDAC-B.Patch400.SeuratObj.rds"
 
-dataObjProcessed <- readRDS(paste0(workDir,basename(objectRdsName), ".processed.rds"))
+PDACB_dataObjProcessed <- readRDS(paste0(workDir,basename(PDACB_objectRdsName), ".processed.rds"))
+
+PDACB_SPCA_dataObjProcessed <- readRDS(paste0(workDir,basename(PDACB_objectRdsName), ".SPCA.processed.rds"))
 
 ```
 
@@ -152,15 +180,15 @@ dataObjProcessed <- readRDS(paste0(workDir,basename(objectRdsName), ".processed.
 
 ```{r, fig.dim = c(12, 4)}
 
-geneClusterName=grep("SCT_snn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
-imageClusterName=grep("ImageFeature_snn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
-integratedClusterName=grep("wsnn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
+geneClusterName=grep("SCT_snn_res",colnames(PDACB_dataObjProcessed@meta.data),value=TRUE)
+imageClusterName=grep("ImageFeature_snn_res",colnames(PDACB_dataObjProcessed@meta.data),value=TRUE)
+integratedClusterName=grep("wsnn_res",colnames(PDACB_dataObjProcessed@meta.data),value=TRUE)
 
-p1 <- DimPlot(dataObjProcessed, reduction = 'st.umap', group.by = geneClusterName, label = TRUE, 
+p1 <- DimPlot(PDACB_dataObjProcessed, reduction = 'st.umap', group.by = geneClusterName, label = TRUE, 
               repel = TRUE, label.size = 2.5) + NoLegend()
-p2 <- DimPlot(dataObjProcessed, reduction = 'if.umap', group.by =imageClusterName, label = TRUE, 
+p2 <- DimPlot(PDACB_dataObjProcessed, reduction = 'if.umap', group.by =imageClusterName, label = TRUE, 
               repel = TRUE, label.size = 2.5) + NoLegend()
-p3 <- DimPlot(dataObjProcessed, reduction = 'wnn.umap', group.by =integratedClusterName, label = TRUE, repel = TRUE, label.size = 2.5) + NoLegend()
+p3 <- DimPlot(PDACB_dataObjProcessed, reduction = 'wnn.umap', group.by =integratedClusterName, label = TRUE, repel = TRUE, label.size = 2.5) + NoLegend()
 
 p1 + p2 + p3
 
@@ -168,37 +196,85 @@ p1 + p2 + p3
 
 ### SpatialDimPlot
 
+#### PCA
+
 ```{r, fig.dim = c(12, 4)}
 # geneClusterName=grep("SCT_snn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
 # imageClusterName=grep("ImageFeature_snn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
 # integratedClusterName=grep("wsnn_res",colnames(dataObjProcessed@meta.data),value=TRUE)
 
 
-DefaultAssay(dataObjProcessed) <- "Spatial"
-p4 <- SpatialDimPlot(dataObjProcessed, group.by = geneClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+DefaultAssay(PDACB_dataObjProcessed) <- "Spatial"
+p4 <- SpatialDimPlot(PDACB_dataObjProcessed, group.by = geneClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
 #+ NoLegend()
 
-DefaultAssay(dataObjProcessed) <- "ImageFeature"
-p5 <- SpatialDimPlot(dataObjProcessed, group.by = imageClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+DefaultAssay(PDACB_dataObjProcessed) <- "ImageFeature"
+p5 <- SpatialDimPlot(PDACB_dataObjProcessed, group.by = imageClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
 #+ NoLegend()
 
-p6 <- SpatialDimPlot(dataObjProcessed, group.by=integratedClusterName, label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+p6 <- SpatialDimPlot(PDACB_dataObjProcessed, group.by=integratedClusterName, label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
 #+ NoLegend()
 
 p4 + p5 + p6
 #p4+p6
 
 ```
+#### Spatial PCA
+
+```{r, fig.dim = c(12, 4)}
+geneClusterName=grep("st_spca_snn_res",colnames(PDACB_SPCA_dataObjProcessed@meta.data),value=TRUE)
+imageClusterName=grep("if_spca_snn_res",colnames(PDACB_SPCA_dataObjProcessed@meta.data),value=TRUE)
+integratedClusterName=grep("spca_wsnn_res",colnames(PDACB_SPCA_dataObjProcessed@meta.data),value=TRUE)
+
+
+DefaultAssay(PDACB_SPCA_dataObjProcessed) <- "Spatial"
+p7 <- SpatialDimPlot(PDACB_SPCA_dataObjProcessed, group.by = geneClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+#+ NoLegend()
+
+DefaultAssay(PDACB_SPCA_dataObjProcessed) <- "ImageFeature"
+p8 <- SpatialDimPlot(PDACB_SPCA_dataObjProcessed, group.by = imageClusterName, label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+#+ NoLegend()
+
+p9 <- SpatialDimPlot(PDACB_SPCA_dataObjProcessed, group.by=integratedClusterName, label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+#+ NoLegend()
+
+p7 + p8 + p9
+
+
+```
+
 
 ### Weight of SCT and ImageFeature
 
-```{r, fig.dim = c(8, 4)}
+#### PCA
 
-p7 <- VlnPlot(dataObjProcessed, features = "SCT.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
+```{r, fig.dim = c(8, 4)}
+geneClusterName=grep("SCT_snn_res",colnames(PDACB_dataObjProcessed@meta.data),value=TRUE)
+imageClusterName=grep("ImageFeature_snn_res",colnames(PDACB_dataObjProcessed@meta.data),value=TRUE)
+integratedClusterName=grep("wsnn_res",colnames(PDACB_dataObjProcessed@meta.data),value=TRUE)
+
+p10 <- VlnPlot(PDACB_dataObjProcessed, features = "SCT.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
   NoLegend()
-p8 <- VlnPlot(dataObjProcessed, features = "ImageFeature.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
+p11 <- VlnPlot(PDACB_dataObjProcessed, features = "ImageFeature.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
   NoLegend()
-p7 + p8
+p10 + p11
+
+```
+
+#### Spatial PCA
+
+
+```{r, fig.dim = c(8, 4)}
+geneClusterName=grep("st_spca_snn_res",colnames(PDACB_SPCA_dataObjProcessed@meta.data),value=TRUE)
+imageClusterName=grep("if_spca_snn_res",colnames(PDACB_SPCA_dataObjProcessed@meta.data),value=TRUE)
+integratedClusterName=grep("spca_wsnn_res",colnames(PDACB_SPCA_dataObjProcessed@meta.data),value=TRUE)
+
+
+p12 <- VlnPlot(PDACB_SPCA_dataObjProcessed, features = "SCT.spca.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
+  NoLegend()
+p13 <- VlnPlot(PDACB_SPCA_dataObjProcessed, features = "ImageFeature.spca.weight", group.by = integratedClusterName, sort = TRUE, pt.size = 0.1) +
+  NoLegend()
+p12 + p13
 
 ```
 

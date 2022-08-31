@@ -8,6 +8,8 @@
 #' @param IntNMF.nf
 #' @param MultimodalMethod
 #' @param WnnImageWeightFactor
+#' @param normalizeMethod
+#' @param DimReducMethod
 #'
 #' @return
 #' @importFrom omicade4 mcia
@@ -16,29 +18,66 @@
 #'
 #' @examples
 MultiModalIntegrationVisium <- function(object,
-                                        pcaDim_s=30, pcaDim_i=30,
-                                        imageAndGeneResolution=0.8,
-                                        cia.nf = 20, IntNMF.nf = 20,
+                                        normalizeMethod = c("SCT", "log"),
+                                        DimReducMethod = c("PCA", "SpatialPCA"),
+                                        pcaDim_s = 30,
+                                        pcaDim_i = 30,
+                                        imageAndGeneResolution = 0.8,
+                                        cia.nf = 20,
+                                        IntNMF.nf = 20,
                                         MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA"),
-                                        WnnImageWeightFactor=1){
+                                        WnnImageWeightFactor = 1){
   if("WNN" %in% MultimodalMethod) {
     # WNN
-    object <- FindMultiModalNeighbors(
-      object, reduction.list = list("pca", "ipca"),
-      dims.list = list(1:pcaDim_s, 1:pcaDim_i),
-      modality.weight.name = c("SCT.weight","ImageFeature.weight"),
-      return.intermediate = TRUE)
-
-    if (WnnImageWeightFactor!=1) {
-      modalityWeightObj=(object@misc$modality.weight)
-      modalityWeightObj@modality.weight.list[["ipca"]]=modalityWeightObj@modality.weight.list[["ipca"]]*WnnImageWeightFactor
+    if(DimReducMethod == "PCA") {
+      #PCA
       object <- FindMultiModalNeighbors(
-        object, reduction.list = list("pca", "ipca"),
-        dims.list = list(1:pcaDim_s, 1:pcaDim_i), modality.weight.name = c("SCT.weight","ImageFeature.weight"),
-        modality.weight=modalityWeightObj)
+        object,
+        reduction.list = list("pca", "ipca"),
+        dims.list = list(1:pcaDim_s, 1:pcaDim_i),
+        modality.weight.name = c("SCT.weight", "ImageFeature.weight"),
+        return.intermediate = TRUE)
+
+      if (WnnImageWeightFactor != 1) {
+        modalityWeightObj <- (object@misc$modality.weight)
+        modalityWeightObj@modality.weight.list[["ipca"]] <- modalityWeightObj@modality.weight.list[["ipca"]]*WnnImageWeightFactor
+        object <- FindMultiModalNeighbors(
+          object,
+          reduction.list = list("pca", "ipca"),
+          dims.list = list(1:pcaDim_s, 1:pcaDim_i),
+          modality.weight.name = c("SCT.weight", "ImageFeature.weight"),
+          modality.weight = modalityWeightObj)
+      }
+      object <- FindClusters(object, graph.name = "wsnn", algorithm = 3, resolution = imageAndGeneResolution, verbose = FALSE)
+      object <- RunUMAP(object, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
+    } else if(DimReducMethod == "SpatialPCA") {
+      ##SpatialPCA
+      object <- FindMultiModalNeighbors(
+        object,
+        reduction.list = list("GeneSpatialPCA", "ImageSpatialPCA"),
+        dims.list = list(1:pcaDim_s, 1:pcaDim_i),
+        knn.graph.name = "spca_wknn",
+        snn.graph.name = "spca_wsnn",
+        weighted.nn.name = "spca.weighted.nn",
+        modality.weight.name = c("SCT.spca.weight", "ImageFeature.spca.weight"),
+        return.intermediate = TRUE)
+
+      if (WnnImageWeightFactor != 1) {
+        modalityWeightObj <- (object@misc$modality.weight)
+        modalityWeightObj@modality.weight.list[["ImageSpatialPCA"]] <- modalityWeightObj@modality.weight.list[["ImageSpatialPCA"]]*WnnImageWeightFactor
+        object <- FindMultiModalNeighbors(
+          object,
+          reduction.list = list("GeneSpatialPCA", "ImageSpatialPCA"),
+          dims.list = list(1:pcaDim_s, 1:pcaDim_i),
+          knn.graph.name = "spca_wknn",
+          snn.graph.name = "spca_wsnn",
+          weighted.nn.name = "spca.weighted.nn",
+          modality.weight.name = c("SCT.spca.weight", "ImageFeature.spca.weight"),
+          modality.weight = modalityWeightObj)
+      }
+      object <- FindClusters(object, graph.name = "spca_wsnn", algorithm = 3, resolution = imageAndGeneResolution, verbose = FALSE)
+      object <- RunUMAP(object, nn.name = "spca.weighted.nn", reduction.name = "spca.wnn.umap", reduction.key = "spcawnnUMAP_")
     }
-    object <- FindClusters(object, graph.name = "wsnn", algorithm = 3, resolution = imageAndGeneResolution, verbose = FALSE)
-    object <- RunUMAP(object, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
   }
 
   list <- list()

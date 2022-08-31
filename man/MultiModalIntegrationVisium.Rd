@@ -6,6 +6,8 @@
 \usage{
 MultiModalIntegrationVisium(
   object,
+  normalizeMethod = c("SCT", "log"),
+  DimReducMethod = c("PCA", "SpatialPCA"),
   pcaDim_s = 30,
   pcaDim_i = 30,
   imageAndGeneResolution = 0.8,
@@ -16,7 +18,7 @@ MultiModalIntegrationVisium(
 )
 }
 \arguments{
-\item{WnnImageWeightFactor}{}
+\item{DimReducMethod}{}
 }
 \value{
 

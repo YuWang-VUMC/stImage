@@ -6,19 +6,26 @@
 \usage{
 MultimodalPreProcess(
   object,
-  GeneFeaturePCobj = NULL,
-  ImageFeaturePCobj = NULL,
+  GeneFeaturePCs = NULL,
+  ImageFeaturePCs = NULL,
   normalizeMethod = c("SCT", "log"),
   pcaDim_s = 30,
   pcaDim_i = 30,
+  DimReducMethod = c("PCA", "SpatialPCA"),
   genePercentCut = 0.1,
   imagePercentCut = 0.3,
   geneResolution = 0.8,
-  imageFeatureResolution = geneResolution
+  imageFeatureResolution = geneResolution,
+  sparkversion = "spark",
+  numCores_spark = 1,
+  gene.number = 3000,
+  customGenelist = NULL,
+  min.loctions = 30,
+  min.features = 30
 )
 }
 \arguments{
-\item{imageFeatureResolution}{}
+\item{min.features}{}
 }
 \value{
 

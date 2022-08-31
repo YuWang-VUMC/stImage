@@ -47,11 +47,14 @@ library(Seurat)
 
 ```{r define, echo = T, eval = T}
 
-library(SeuratData)
-dataObj <- LoadData("stxBrain", type = "anterior1")
-dataObj <- SCTransform(dataObj, assay = "Spatial", verbose = FALSE)
-dataObj <- RunPCA(dataObj, assay = "SCT", verbose = FALSE)
+# library(SeuratData)
+# dataObj <- LoadData("stxBrain", type = "anterior1")
+# dataObj <- SCTransform(dataObj, assay = "Spatial", verbose = FALSE)
+# dataObj <- RunPCA(dataObj, assay = "SCT", verbose = FALSE)
 
+#dataObj=readRDS("/data/cqs/ywang/source/analysis/HER2.H1.Patch200.SeuratObj.rds.processed.rds")
+#dataObj@reductions$pca
+dataObj=readRDS("/data/cqs/ywang/source/analysis/HER2.H1.Patch200.SeuratObj.rds.processed.rds")
 #dataObj@reductions$pca
 
 ```
@@ -64,9 +67,9 @@ dataObj <- RunPCA(dataObj, assay = "SCT", verbose = FALSE)
 
 
 library(lsa)
-nPCs=50
+nPCs=30
 
-imageFeaturePCs=t(dataObj@reductions$pca@cell.embeddings[,1:nPCs])
+imageFeaturePCs=t(dataObj@reductions$ipca@cell.embeddings[,1:nPCs])
 
 # set.seed(123)
 # imageFeaturePCs=matrix(rnorm(nPCs*2000),nrow=2000,ncol=nPCs)
@@ -92,8 +95,8 @@ spotsImageSimilarity[spotsImageSimilarity<0]=0
 ```{r}
 
 #head(dataObj@images[[1]]@coordinates)
-spotsCoordinate=dataObj@images[[1]]@coordinates[,c(4:5)]
-
+#spotsCoordinate=dataObj@images[[1]]@coordinates[,c(4:5)]
+spotsCoordinate=dataObj@images$images@coordinates
 
 find_coordinate_neighbor=function(spotsCoordinate,n=6) {
   
@@ -108,7 +111,7 @@ find_coordinate_neighbor=function(spotsCoordinate,n=6) {
   return(spotToNeighborList)
 }
 
-spotToNeighborList=find_coordinate_neighbor(spotsCoordinate)
+spotToNeighborList=find_coordinate_neighbor(spotsCoordinate,n=4)
 
 #spotToNeighborList[1:3]
 
@@ -142,7 +145,10 @@ extract_geneExp_ByNeighbor = function(geneExp,spotToNeighborList,spotsImageSimil
     }
   }
   
-  return(geneExpByNeighbor)
+  #geneExpByNeighbor==0, keep geneExp. Otherwise take average of geneExp and geneExpByNeighbor
+  geneExpNormlizedByNeighbor=(geneExp*(2-sign(abs(geneExpByNeighbor)))+geneExpByNeighbor)/2
+  
+  return(geneExpNormlizedByNeighbor)
   
 }
 

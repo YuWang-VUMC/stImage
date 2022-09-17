@@ -60,6 +60,25 @@ dataObj=readRDS("/data/cqs/ywang/source/analysis/HER2.H1.Patch200.SeuratObj.rds.
 ```
 
 
+# doing the work
+
+```{r}
+
+source("~/source/stImage/R/normalizeGeneByImage.R")
+geneExpByNeighbor=normalizeGeneByImage(dataObj)
+
+```
+
+
+
+
+
+
+
+
+
+# All codes below is for development only
+
 ## Distance of spots based on PCA of iamge features
 
 ```{r}

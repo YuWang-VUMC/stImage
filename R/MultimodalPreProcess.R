@@ -19,6 +19,7 @@
 #' @param min.features
 #'
 #' @return
+#' @importFrom SpatialPCA CreateSpatialPCAObject
 #' @export
 #'
 #' @examples

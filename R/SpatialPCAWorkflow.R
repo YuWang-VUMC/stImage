@@ -7,6 +7,9 @@
 #' @param fast
 #'
 #' @return
+#' @importFrom SpatialPCA SpatialPCA_buildKernel
+#' @importFrom SpatialPCA SpatialPCA_EstimateLoading
+#' @importFrom SpatialPCA SpatialPCA_SpatialPCs
 #' @export
 #'
 #' @examples

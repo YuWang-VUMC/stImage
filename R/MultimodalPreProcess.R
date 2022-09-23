@@ -85,6 +85,11 @@ MultimodalPreProcess <- function(object,
       SPCAobj <- SpatialPCAWorkflow(SPCAobj)
       SPCApcs <- t(SPCAobj@SpatialPCs)
       colnames(SPCApcs) <- paste0("PC",1:ncol(SPCApcs))
+      overlapSpots=intersect(row.names(object@meta.data),row.names(SPCApcs))
+      if (length(overlapSpots)<nrow(object@meta.data)) { #some spots were filtered out in CreateSpatialPCAObject
+        warning(paste0(nrow(object@meta.data)-length(overlapSpots)," spots didn't pass spatialPCA filtering and were removed in furthur analysis"))
+        object=subset(object,cells=overlapSpots)
+      }
       object[["GeneSpatialPCA"]] <- CreateDimReducObject(embeddings = SPCApcs, key = "GeneSpatial_", assay = DefaultAssay(object))
       object <- FindNeighbors(object, reduction = "GeneSpatialPCA", graph.name = c("st_spca_nn", "st_spca_snn"), dims = 1:ncol(SPCApcs))
       object <- FindClusters(object, verbose = FALSE, graph.name = "st_spca_snn", resolution = geneResolution)
@@ -144,7 +149,7 @@ MultimodalPreProcess <- function(object,
     } else if(DimReducMethod == "SpatialPCA") {
       imageFeaturesNormlized <- object@assays[["ImageFeature"]]@data
       IFSPCAobj <- CreateSpatialPCAObject(counts = imageFeaturesNormlized,
-                                          location = location,
+                                          location = location[colnames(imageFeaturesNormlized),],
                                           project = object@project.name,
                                           gene.type="custom",
                                           customGenelist = row.names(imageFeaturesNormlized),

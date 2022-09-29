@@ -89,6 +89,170 @@ saveRDS(PDAC_A_dataObj,paste0(workDir,sampleName,".Patch400.SeuratObj.rds"))
 ```
 
 
+## Data analysis of Spatial matrix and ImageFeature matrix (Updated)
+
+All analysis should be replaced by codes in this section
+
+
+### Read data
+
+```{r}
+
+objectRdsName="/data/cqs/ywang/source/analysis/PDAC-B.Patch400.SeuratObj.rds"
+#objectRdsName="/scratch/cqs/zhaos/Spatial/SpatialTranscriptomicsImage/objRds/PDAC-B.Patch200.SeuratObj.rds"
+dataObj=readRDS(objectRdsName)
+
+```
+
+### Analysis by pipeline
+
+#### PCA
+```{r}
+clusterNum=3
+
+#analyzed by PCA
+dataObjPCA <-
+  MultimodalPreProcess(
+    dataObj,
+    normalizeMethod = "SCT",
+    DimReducMethod = "PCA",
+    genePercentCut = 0.3,
+    imagePercentCut = 0.3
+  )
+dataObjPCA = findSNNClusters(
+  dataObjPCA,
+  reduction = "SCTPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+dataObjPCA = findSNNClusters(
+  dataObjPCA,
+  reduction = "ImageFeaturePCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+dataObjPCA = MultiModalIntegrationVisium(
+  dataObjPCA,
+  MultimodalMethod = "WNN",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
+p4 <- SpatialDimPlot(dataObjPCA, group.by = "SCTPCA_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+p5 <- SpatialDimPlot(dataObjPCA, group.by = "ImageFeaturePCA_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+p6 <- SpatialDimPlot(dataObjPCA, group.by="wnn_cluster3", label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+
+p4 + p5 + p6
+
+
+```
+
+#### Normlize gene by image
+
+```{r}
+
+
+dataObjPCAGeneNormByImage = NormalizeGeneByImage(dataObjPCA,
+                                                 assay = "SCT",
+                                                 dataSlot = c("data"))
+dataObjPCAGeneNormByImage = runDimReduc(dataObjPCAGeneNormByImage, assay =
+                                          "SCTNormalizedByImage")
+dataObjPCAGeneNormByImage = findSNNClusters(
+  dataObjPCAGeneNormByImage,
+  reduction = "SCTNormalizedByImagePCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
+
+dataObjPCAGenePCNormByImage = NormalizeGeneByImage(dataObjPCA,
+                                                   assay = "SCT",
+                                                   geneDimReducName = "SCTPCA")
+dataObjPCAGenePCNormByImage = findSNNClusters(
+  dataObjPCAGenePCNormByImage,
+  reduction = "SCTPCANormalizedByImage",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
+p7 <- SpatialDimPlot(dataObjPCAGeneNormByImage, group.by = "SCTNormalizedByImagePCA_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+#+ NoLegend()
+p8 <- SpatialDimPlot(dataObjPCAGenePCNormByImage, group.by="SCTPCANormalizedByImage_cluster3", label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+#+ NoLegend()
+
+p7 + p8
+
+```
+
+
+#### SpatialPCA
+
+```{r}
+
+dataObjSpatialPCA <-
+  MultimodalPreProcess(
+    dataObj,
+    DimReducMethod = "SpatialPCA",
+    genePercentCut = 0.05,
+    imagePercentCut = 0.05
+  )
+dataObjSpatialPCA = findSNNClusters(
+  dataObjSpatialPCA,
+  reduction = "SCTSpatialPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+dataObjSpatialPCA = findSNNClusters(
+  dataObjSpatialPCA,
+  reduction = "ImageFeatureSpatialPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+dataObjSpatialPCA = MultiModalIntegrationVisium(
+  dataObjSpatialPCA,
+  MultimodalMethod = "WNN",
+  reduction.list = list("SCTSpatialPCA", "ImageFeatureSpatialPCA"),
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
+
+p4 <- SpatialDimPlot(dataObjSpatialPCA, group.by = "SCTSpatialPCA_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+p5 <- SpatialDimPlot(dataObjSpatialPCA, group.by = "ImageFeatureSpatialPCA_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+p6 <- SpatialDimPlot(dataObjSpatialPCA, group.by="wnn_cluster3", label = TRUE, label.box = F, repel = TRUE, label.size = 2,pt.size.factor = 10)
+
+p4 + p5 + p6
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Data analysis of Spatial matrix and ImageFeature matrix
 
 ```{r, eval = F}

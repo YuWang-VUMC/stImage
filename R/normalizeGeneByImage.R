@@ -35,7 +35,7 @@ FindCoordinateNeighbor <- function(spotsCoordinate, n=6) {
 ExtractGeneExpByNeighbor <- function(geneExp,
                                      spotToNeighborList,
                                      spotsImageSimilarity) {
-  geneExpByNeighbor <- matrix(NA, ncol = ncol(geneExp), nrow = nrow(geneExp))
+  geneExpByNeighbor <- matrix(0, ncol = ncol(geneExp), nrow = nrow(geneExp))
   colnames(geneExpByNeighbor) <- colnames(geneExp)
   row.names(geneExpByNeighbor) <- row.names(geneExp)
 
@@ -77,18 +77,22 @@ ExtractGeneExpByNeighbor <- function(geneExp,
 #' @examples
 NormalizeGeneByImage <- function(dataObj,
                                  ipcaObj=NULL,
-                                 nPCs=30,
+                                 imageDimReducName="ImageFeaturePCA",
+                                 pcaDim_i=30,
                                  distanceMethod="cosine",
                                  spotsCoordinate=NULL,
                                  coordinateNeighborN=4,
-                                 geneExp=NULL) {
+                                 geneExp=NULL,
+                                 geneDimReducName=NULL,
+                                 assay="SCT",dataSlot=c("data","scale.data")
+                                 ) {
 
   #distance based on Image PCs
   message("Similarity by image features...")
   if (is.null(ipcaObj)) {
-    imageFeaturePCs <- t(dataObj@reductions$ipca@cell.embeddings[ ,1 : nPCs])
+    imageFeaturePCs <- t(dataObj[[imageDimReducName]]@cell.embeddings[ ,1:pcaDim_i])
   } else {
-    imageFeaturePCs <- t(ipcaObj@cell.embeddings[ ,1 : nPCs])
+    imageFeaturePCs <- t(ipcaObj@cell.embeddings[ ,1 : pcaDim_i])
   }
   #distanceMethod=c("euclidean")
   if (distanceMethod == "cosine") {
@@ -107,15 +111,42 @@ NormalizeGeneByImage <- function(dataObj,
 
   #Normalization
   message("Normalization...")
-  if (is.null(geneExp)) {
-    geneExp <- dataObj@assays$SCT@data
+  if (is.null(geneExp)) { #use geneExp from object
+    if (!is.null(geneDimReducName)) { #Normalization PCA
+      geneExp <- t(dataObj[[geneDimReducName]]@cell.embeddings)
+    } else { #Normalization gene
+      dataSlot=match.arg(dataSlot)
+      geneExp <- GetAssayData(dataObj, slot = dataSlot, assay = assay)
+    }
   }
   #this is slow
-  geneExpByNeighbor <- extract_geneExp_ByNeighbor(geneExp,
+  geneExpByNeighbor <- ExtractGeneExpByNeighbor(geneExp,
                                                   spotToNeighborList,
                                                   spotsImageSimilarity)
 
-  return(geneExpByNeighbor)
+  #return(geneExpByNeighbor)
+
+  if (!is.null(geneDimReducName)) { #Need update PCA
+    newGeneDimReducName=paste0(geneDimReducName,"NormalizedByImage")
+    dataObj[[newGeneDimReducName]] <- CreateDimReducObject(embeddings = t(geneExpByNeighbor), key = "PC_", assay = assay)
+    message(paste0("Normalized gene PCs were added to ", newGeneDimReducName))
+
+  } else { #Need update gene expression
+    geneExpByNeighborAssay=dataObj[[assay]]
+    geneExpByNeighborAssay <- SetAssayData(object = geneExpByNeighborAssay,
+                                           slot = dataSlot,
+                                           new.data = geneExpByNeighbor)
+    if (dataSlot=="data") { #need update scale.data
+      geneExpByNeighborAssay=geneExpByNeighborAssay %>% ScaleData()
+    }
+    newAssayName=paste0(assay,"NormalizedByImage")
+    dataObj[[newAssayName]] <- geneExpByNeighborAssay
+
+    DefaultAssay(dataObj) <- newAssayName
+    message(paste("Set default assay to ", newAssayName))
+  }
+
+  return(dataObj)
 }
 
 

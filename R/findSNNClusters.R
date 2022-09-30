@@ -12,6 +12,7 @@ findSNNClusters=function(object,
                          reduction.name = paste0(reduction,'UMAP'),
                          reduction.key = paste0(reduction,'UMAP_'),
                          ...) {
+  dims=intersect(dims,1:ncol(object@reductions[[reduction]]@cell.embeddings))
   if (length(graph.name)==1 && graph.name %in% names(object@graphs)) { #SNN graph.name exist and no need to do FindNeighbors
     message(paste0("Using ",graph.name," to FindClusters. Skipping FindNeighbors."))
     snnGraphName=graph.name

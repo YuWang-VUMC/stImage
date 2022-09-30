@@ -32,6 +32,9 @@ MultiModalIntegrationVisium <- function(object,
                                          ...) {
   normalizeMethod=match.arg(normalizeMethod)
 
+  pcaDim_s=min(pcaDim_s,ncol(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
+  pcaDim_i=min(pcaDim_i,ncol(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
+
   if ("WNN" %in% MultimodalMethod) {
     # WNN
     object <- FindMultiModalNeighbors(

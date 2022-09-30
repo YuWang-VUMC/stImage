@@ -80,5 +80,27 @@ MultimodalPreProcess <- function(object,
     ...
   )
 
+  #RGB features
+  if ("RGB" %in% Assays(object)) {
+    message("## Working on RGB features")
+
+    assay = "RGB"
+    DefaultAssay(object) <- assay
+    VariableFeatures(object) <- row.names(object[[assay]])
+    rgb_norm <- 1 - (object@assays$RGB@data / 255)
+    object@assays$RGB@data <- as(object = rgb_norm, Class = 'dgCMatrix')
+    object = object %>% ScaleData()
+
+    object = runDimReduc(
+      object,
+      DimReducMethod = DimReducMethod,
+      assay = assay,
+      percentCut = imagePercentCut,
+      pcaDim = 10,
+      ...
+    )
+  }
+
+
   return(object)
 }

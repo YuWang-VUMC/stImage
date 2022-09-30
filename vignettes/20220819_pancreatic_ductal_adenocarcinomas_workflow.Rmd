@@ -227,6 +227,58 @@ p4 + p5 + p6
 ```
 
 
+#### RGB
+
+```{r}
+
+objectRdsName="/data/cqs/ywang/source/analysis/RGB/PDAC-B.Patch400.RGBquantile.testing.SeuratObj.rds"
+dataObj=readRDS(objectRdsName)
+
+
+dataObjRgb<-
+  MultimodalPreProcess(
+    dataObj,
+    DimReducMethod = "PCA",
+    genePercentCut = 0.05,
+    imagePercentCut = 0.05
+  )
+ 
+dataObjRgb = findSNNClusters(
+  dataObjRgb,
+  reduction = "SCTPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+dataObjRgb = findSNNClusters(
+  dataObjRgb,
+  reduction = "RGBPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+p1=SpatialDimPlot(dataObjRgb, group.by = "SCTPCA_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+p2=SpatialDimPlot(dataObjRgb, group.by = "RGBPCA_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10) 
+
+
+dataObjRgb = MultiModalIntegrationVisium(
+  dataObjRgb,
+  MultimodalMethod = "WNN",
+  reduction.list = list("SCTPCA", "RGBPCA"),
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+p3=SpatialDimPlot(dataObjRgb, group.by = "wnn_cluster3", label = TRUE, label.box = F, label.size = 2,pt.size.factor = 10)
+
+p1+p2+p3
+
+
+
+
+```
+
+
+
+
+
 
 
 

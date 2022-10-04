@@ -7,18 +7,21 @@
 MultiModalIntegrationVisium(
   object,
   normalizeMethod = c("SCT", "log"),
-  DimReducMethod = c("PCA", "SpatialPCA"),
+  reduction.list = list("SCTPCA", "ImageFeaturePCA"),
   pcaDim_s = 30,
   pcaDim_i = 30,
-  imageAndGeneResolution = 0.8,
+  resolution = 0.8,
+  nCluster = NULL,
+  clusterColumnName = if (!is.null(nCluster)) paste0("wnn_cluster", nCluster) else NULL,
   cia.nf = 20,
   IntNMF.nf = 20,
   MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA"),
-  WnnImageWeightFactor = 1
+  WnnImageWeightFactor = 1,
+  ...
 )
 }
 \arguments{
-\item{DimReducMethod}{}
+\item{normalizeMethod}{}
 }
 \value{
 

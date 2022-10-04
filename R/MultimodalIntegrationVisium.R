@@ -3,13 +3,16 @@
 #' @param object
 #' @param pcaDim_s
 #' @param pcaDim_i
-#' @param imageAndGeneResolution
 #' @param cia.nf
 #' @param IntNMF.nf
 #' @param MultimodalMethod
 #' @param WnnImageWeightFactor
+#' @param reduction.list
+#' @param resolution
+#' @param nCluster
+#' @param clusterColumnName
+#' @param ...
 #' @param normalizeMethod
-#' @param DimReducMethod
 #'
 #' @return
 #' @importFrom omicade4 mcia
@@ -18,22 +21,22 @@
 #'
 #' @examples
 MultiModalIntegrationVisium <- function(object,
-                                         normalizeMethod = c("SCT", "log"),
-                                         reduction.list = list("SCTPCA", "ImageFeaturePCA"),
-                                         pcaDim_s = 30,
-                                         pcaDim_i = 30,
-                                         resolution = 0.8,
-                                         nCluster=NULL,
-                                         clusterColumnName=if (!is.null(nCluster)) paste0("wnn_cluster",nCluster) else NULL,
-                                         cia.nf = 20,
-                                         IntNMF.nf = 20,
-                                         MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA"),
-                                         WnnImageWeightFactor = 1,
-                                         ...) {
-  normalizeMethod=match.arg(normalizeMethod)
+                                        normalizeMethod = c("SCT", "log"),
+                                        reduction.list = list("SCTPCA", "ImageFeaturePCA"),
+                                        pcaDim_s = 30,
+                                        pcaDim_i = 30,
+                                        resolution = 0.8,
+                                        nCluster = NULL,
+                                        clusterColumnName = if (!is.null(nCluster)) paste0("wnn_cluster",nCluster) else NULL,
+                                        cia.nf = 20,
+                                        IntNMF.nf = 20,
+                                        MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA"),
+                                        WnnImageWeightFactor = 1,
+                                        ...) {
+  normalizeMethod <- match.arg(normalizeMethod)
 
-  pcaDim_s=min(pcaDim_s,ncol(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
-  pcaDim_i=min(pcaDim_i,ncol(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
+  pcaDim_s <- min(pcaDim_s, ncol(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
+  pcaDim_i <- min(pcaDim_i, ncol(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
 
   if ("WNN" %in% MultimodalMethod) {
     # WNN
@@ -63,9 +66,15 @@ MultiModalIntegrationVisium <- function(object,
         modality.weight = modalityWeightObj
       )
     }
-    object=findSNNClusters(object,graph.name = "wsnn",algorithm = 3,
-                           nCluster=nCluster,resolution = resolution,clusterColumnName=clusterColumnName,
-                           nn.name = "weighted.nn",...)
+    object <- findSNNClusters(object,
+                              reduction  = reduction.list[[1]],
+                              graph.name = "wsnn",
+                              algorithm = 3,
+                              nCluster = nCluster,
+                              resolution = resolution,
+                              clusterColumnName = clusterColumnName,
+                              nn.name = "weighted.nn",
+                              ...)
     #object <- FindClusters(object, graph.name = "wsnn", algorithm = 3, resolution = resolution, verbose = FALSE)
     #object <- RunUMAP(object, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
   }

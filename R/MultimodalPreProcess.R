@@ -1,40 +1,31 @@
 #' Title
 #'
 #' @param object
-#' @param GeneFeaturePCs
-#' @param ImageFeaturePCs
 #' @param normalizeMethod
 #' @param pcaDim_s
 #' @param pcaDim_i
+#' @param pcaDim_c
+#' @param DimReducMethod
 #' @param genePercentCut
 #' @param imagePercentCut
-#' @param geneResolution
-#' @param imageFeatureResolution
-#' @param DimReducMethod
-#' @param sparkversion
-#' @param numCores_spark
-#' @param gene.number
-#' @param customGenelist
-#' @param min.loctions
-#' @param min.features
+#' @param ...
 #'
 #' @return
 #' @importFrom SpatialPCA CreateSpatialPCAObject
 #' @export
 #'
 #' @examples
-
-
 MultimodalPreProcess <- function(object,
                                  normalizeMethod = c("SCT", "log"),
                                  pcaDim_s = 30,
                                  pcaDim_i = 30,
+                                 pcaDim_c = 6,
                                  DimReducMethod = c("PCA", "SpatialPCA"),
                                  genePercentCut=0.05,
                                  imagePercentCut=0.05,
                                  ...) {
-  normalizeMethod = match.arg(normalizeMethod)
-  DimReducMethod = match.arg(DimReducMethod)
+  normalizeMethod <- match.arg(normalizeMethod)
+  DimReducMethod <- match.arg(DimReducMethod)
 
   #gene level
   message("## Working on gene expression")
@@ -63,15 +54,15 @@ MultimodalPreProcess <- function(object,
 
   #image level
   message("## Working on image features")
-  assay = "ImageFeature"
+  assay <- "ImageFeature"
   DefaultAssay(object) <- assay
   VariableFeatures(object) <- rownames(object[[assay]])
   object <-
     NormalizeData(object, normalization.method = 'CLR', margin = 1)
   object[[assay]]@data[is.na(object[[assay]]@data)] <- 0
-  object = object %>% ScaleData()
+  object <- object %>% ScaleData()
 
-  object = runDimReduc(
+  object <- runDimReduc(
     object,
     DimReducMethod = DimReducMethod,
     assay = assay,
@@ -84,7 +75,7 @@ MultimodalPreProcess <- function(object,
   if ("RGB" %in% Assays(object)) {
     message("## Working on RGB features")
 
-    assay = "RGB"
+    assay <- "RGB"
     DefaultAssay(object) <- assay
     VariableFeatures(object) <- row.names(object[[assay]])
     rgb_norm <- 1 - (object@assays$RGB@data / 255)
@@ -96,7 +87,7 @@ MultimodalPreProcess <- function(object,
       DimReducMethod = DimReducMethod,
       assay = assay,
       percentCut = imagePercentCut,
-      pcaDim = 10,
+      pcaDim = pcaDim_c,
       ...
     )
   }

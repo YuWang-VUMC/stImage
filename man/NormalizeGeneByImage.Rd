@@ -7,11 +7,15 @@
 NormalizeGeneByImage(
   dataObj,
   ipcaObj = NULL,
-  nPCs = 30,
+  imageDimReducName = "ImageFeaturePCA",
+  pcaDim_i = 30,
   distanceMethod = "cosine",
   spotsCoordinate = NULL,
   coordinateNeighborN = 4,
-  geneExp = NULL
+  geneExp = NULL,
+  geneDimReducName = NULL,
+  assay = "SCT",
+  dataSlot = c("data", "scale.data")
 )
 }
 \arguments{

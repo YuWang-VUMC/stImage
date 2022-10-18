@@ -15,7 +15,12 @@
 #' @export
 #'
 #' @examples
-extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor=1, rawImage = FALSE, savePatchOnImage=NULL) {
+extract_features <- function(imgFile,
+                             positionTable,
+                             patchSize=NULL,
+                             scaleFactor=1,
+                             rawImage = FALSE,
+                             savePatchOnImage=NULL) {
   #suppressMessages(require(tensorflow, warn.conflicts = F, quietly = T))
   #suppressMessages(require(keras, warn.conflicts = F, quietly = T))
   #suppressMessages(require(plotrix, warn.conflicts = F, quietly = T))
@@ -37,6 +42,22 @@ extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor
     imgPatchAll[i,,,] <- imgPatchOne
   }
   message(paste0("Loaded ",nrow(positionTable)," patches with size ",patchSize))
+
+  #RGB
+  imgPatch_quantile <- array(dim=c(nrow(positionTable),9,3))
+  imgPatch_quantile_mtx <- matrix(NA, nrow = nrow(positionTable), ncol = 27)
+
+  for (i in 1:nrow(positionTable)) {
+    for(j in 1:3) {
+      imgPatch_q1 <- quantile(imgPatchAll[i,,,j], probs = c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9))
+      imgPatch_quantile[i,,j] <- imgPatch_q1
+    }
+    imgPatch_quantile_mtx[i,] <- as.vector(imgPatch_quantile[i,,])
+  }
+  rownames(imgPatch_quantile_mtx) <- row.names(positionTable)
+  colnames(imgPatch_quantile_mtx) <- paste0(rep(c("R", "G", "B"), each = 9), seq(10, 90, 10))
+
+
   imgPatchAllProcessed <- imagenet_preprocess_input(imgPatchAll)
   imgPatchFeaturesAll <- model %>% predict(imgPatchAllProcessed)
 
@@ -63,7 +84,8 @@ extract_features <- function(imgFile, positionTable, patchSize=NULL, scaleFactor
     }
     dev.off()
   }
-  return(imgPatchFeaturesAll)
+  if_list <- list("ImageFeature" = imgPatchFeaturesAll, "RGBquantile" = imgPatch_quantile_mtx)
+  return(if_list)
 }
 
 #' extract image features for Visium dataset

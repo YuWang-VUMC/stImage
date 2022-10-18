@@ -92,21 +92,11 @@ FindNClusters <- function(object,
     }
     return(object)
   }
-<<<<<<< HEAD
   result=ssanv::uniroot.integer(f=FindClustersForUniroot,interval=resolutionRange*100,
                                 step.power=5,
                                 object=object,nCluster=nCluster,
                                 ...)
   selectedResolution=result$root/100
-=======
-  result <- ssanv::uniroot.integer(f = FindClustersForUniroot,
-                                   interval = resolutionRange * 100,
-                                   step.power = 2,
-                                   object = object,
-                                   nCluster = nCluster,
-                                   ...)
-  selectedResolution <- result$root/100
->>>>>>> d0fba68aee14797ae32a632982950b6a6252c3e8
   #browser()
   object <- FindClusters(object, resolution = selectedResolution, ...)
   return(object)

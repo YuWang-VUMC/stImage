@@ -63,7 +63,7 @@ FindNClusters=function(object,nCluster=6,
     return(object)
   }
   result=ssanv::uniroot.integer(f=FindClustersForUniroot,interval=resolutionRange*100,
-                                step.power=2,
+                                step.power=5,
                                 object=object,nCluster=nCluster,
                                 ...)
   selectedResolution=result$root/100

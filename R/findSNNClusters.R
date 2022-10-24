@@ -34,6 +34,7 @@ findSNNClusters <- function(object,
     message(paste0("Using ",graph.name," to FindClusters. Skipping FindNeighbors."))
     snnGraphName <- graph.name
   } else {
+    dims=intersect(dims,1:ncol(object@reductions[[reduction]]@cell.embeddings))
     object <- FindNeighbors(object, reduction = reduction, graph.name = graph.name, dims = dims)
     snnGraphName <- graph.name[2]
   }

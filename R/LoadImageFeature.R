@@ -39,6 +39,7 @@
 LoadImageFeatureVisium <- function(dataDir,
                                    filename = "filtered_feature_bc_matrix.h5",
                                    imageFeatures,
+                                   RGBquantile = NULL,
                                    assay = "Spatial",
                                    slice = "slice1",
                                    filter.matrix = TRUE,
@@ -55,9 +56,9 @@ LoadImageFeatureVisium <- function(dataDir,
                             image = image)
   #removing constant features
   constantColumns <- which(apply(imageFeatures, 2, function(x) sd(x, na.rm=TRUE)) == 0)
-  if (length(constantColumns)>0) {
+  if (length(constantColumns) > 0) {
     imageFeatures <- imageFeatures[, -constantColumns]
-    warning(paste0(length(constantColumns)," image features have SD=0 and were removed"))
+    warning(paste0(length(constantColumns), " image features have SD=0 and were removed"))
   }
   imageFeaturesObj <- CreateAssayObject(counts = t(imageFeatures))
   object[["ImageFeature"]] <- imageFeaturesObj
@@ -99,7 +100,10 @@ LoadImageFeatureVisium <- function(dataDir,
 #' positionTable = positionTable, project = "test")
 #' }
 #'
-LoadImageFeature <- function(countTable, imageFeatures, positionTable,
+LoadImageFeature <- function(countTable,
+                             imageFeatures,
+                             positionTable,
+                             RGBquantile = NULL,
                              project = NULL, ...) {
   imageFeaturesObj <- CreateAssayObject(counts = t(imageFeatures))
   object <- CreateSeuratObject(countTable, project = project, assay = "Spatial")

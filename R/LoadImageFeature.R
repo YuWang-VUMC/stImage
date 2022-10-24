@@ -100,14 +100,11 @@ LoadImageFeatureVisium <- function(dataDir,
 #' positionTable = positionTable, project = "test")
 #' }
 #'
-<<<<<<< HEAD
+
 LoadImageFeature <- function(countTable,
                              imageFeatures,
                              positionTable,
                              RGBquantile = NULL,
-=======
-LoadImageFeature <- function(countTable, imageFeatures, positionTable,RGBquantile=NULL,
->>>>>>> 529b0b310d4b64696ffd4bb17919973a7a1f237c
                              project = NULL, ...) {
   imageFeaturesObj <- CreateAssayObject(counts = t(imageFeatures))
   object <- CreateSeuratObject(countTable, project = project, assay = "Spatial")

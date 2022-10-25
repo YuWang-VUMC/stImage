@@ -30,6 +30,8 @@ MultiModalIntegrationVisium <- function(object,
                                         clusterColumnName = if (!is.null(nCluster)) paste0("wnn_cluster",nCluster) else NULL,
                                         cia.nf = 20,
                                         IntNMF.nf = 20,
+                                        genePercentCut=0.05,
+                                        imagePercentCut=0.05,
                                         MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA"),
                                         WnnImageWeightFactor = 1,
                                         ...) {
@@ -81,11 +83,28 @@ MultiModalIntegrationVisium <- function(object,
 
   list <- list()
   if (normalizeMethod == "SCT") {
-    list[["SCT"]] <- as.matrix(object@assays$SCT@data)
+    sct.data <- object@assays$SCT@data
+    geneExpressionPercent <- apply(sct.data, 1, function(x) length(which(x>0)) / length(x))
+    filterFeatures <- setdiff(rownames(sct.data), names(which(geneExpressionPercent <= genePercentCut)))
+    sct.data <- sct.data[filterFeatures, ]
+
+    list[["SCT"]] <- as.matrix(sct.data)
   } else if (normalizeMethod == "log") {
-    list[["Spatial"]] <- as.matrix(object@assays$SCT@data)
+    spatial.data <- object@assays$Spatial@data
+    geneExpressionPercent <- apply(spatial.data, 1, function(x) length(which(x>0)) / length(x))
+    filterFeatures <- setdiff(rownames(spatial.data), names(which(geneExpressionPercent <= genePercentCut)))
+    spatial.data <- spatial.data[filterFeatures, ]
+
+    list[["Spatial"]] <- as.matrix(spatial.data)
   }
-  list[["ImageFeature"]] <- object@assays$ImageFeature@data
+  if.data <- object@assays$ImageFeature@data
+  imagePercent <- apply(if.data, 1, function(x) length(which(x>0)) / length(x))
+  filterFeatures <- setdiff(rownames(if.data), names(which(imagePercent <= imagePercentCut)))
+  if.data <- if.data[filterFeatures, ]
+
+  list[["ImageFeature"]] <- if.data
+
+  list[["RGB"]] <- as.matrix(object@assays$RGB@data)
   list_pos <- list()
 
   for (j in 1:length(list)) {
@@ -113,16 +132,17 @@ MultiModalIntegrationVisium <- function(object,
       FindNeighbors(
         object,
         reduction = "mcia",
-        graph.name = "mcia_snn",
+        graph.name = c("mcia_nn", "mcia_snn"),
         dims = 1:cia.nf
       )
-    object <-
-      FindClusters(
-        object,
-        verbose = FALSE,
-        graph.name = "mcia_snn",
-        resolution = imageAndGeneResolution
-      )
+    object <- findSNNClusters(object,
+                              reduction  = "mcia",
+                              graph.name = "mcia_snn",
+                              algorithm = 3,
+                              nCluster = nCluster,
+                              resolution = resolution,
+                              clusterColumnName = paste0("mcia_snn_cluster",nCluster),
+                              ...)
   }
   if ("IntNMF" %in% MultimodalMethod) {
     require(IntNMF)
@@ -143,13 +163,14 @@ MultiModalIntegrationVisium <- function(object,
         graph.name = c("intnmf_nn", "intnmf_snn"),
         dims = 1:IntNMF.nf
       )
-    object <-
-      FindClusters(
-        object,
-        verbose = FALSE,
-        graph.name = "intnmf_snn",
-        resolution = imageAndGeneResolution
-      )
+    object <- findSNNClusters(object,
+                              reduction  = "intnmf",
+                              graph.name = "intnmf_snn",
+                              algorithm = 3,
+                              nCluster = nCluster,
+                              resolution = resolution,
+                              clusterColumnName = paste0("intnmf_snn_cluster",nCluster),
+                              ...)
   }
   if ("tICA" %in% MultimodalMethod) {
     require(tensorBSS)
@@ -179,16 +200,17 @@ MultiModalIntegrationVisium <- function(object,
       FindNeighbors(
         object,
         reduction = "tica",
-        graph.name = "tica_snn",
+        graph.name = c("tica_nn", "tica_snn"),
         dims = 1:cia.nf
       )
-    object <-
-      FindClusters(
-        object,
-        verbose = FALSE,
-        graph.name = "tica_snn",
-        resolution = imageAndGeneResolution
-      )
+    object <- findSNNClusters(object,
+                              reduction  = "tica",
+                              graph.name = "tica_snn",
+                              algorithm = 3,
+                              nCluster = nCluster,
+                              resolution = resolution,
+                              clusterColumnName = paste0("tica_snn_cluster",nCluster),
+                              ...)
   }
   return(object)
 }

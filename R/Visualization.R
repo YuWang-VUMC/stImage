@@ -45,7 +45,7 @@ AllSpatialDimPlot <- function(object,
   plots <- list()
   for (i in 1:length(groups)) {
     cl <- setNames(object@meta.data[,groups[i]], rownames(object@meta.data[groups[i]]))
-
+    location$cluster <- cl
     # arrange colors by Palo if not set by user
     pal <- gg_color_hue(length(unique(cl)))
     palopal <- Palo(location, cl, pal)
@@ -66,17 +66,17 @@ AllSpatialDimPlot <- function(object,
         sf <- st_as_sf(vcut, celltype = cl)
         sf_0 <- sf[sf$celltype %in% as.character(cluster.highlight),]
 
-        plots[[groups[i]]] <- ggplot() +
+        plots[[groups[i]]] <- ggplot(data = location) +
           geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-          geom_point(data = location, aes(x = y, y = desc(x), col = cl), size = 1) +
+          geom_point(aes(x = y, y = desc(x), col = cluster), size = 1) +
           scale_color_manual(values = col) +
           guides(color = guide_legend(title = groups[i])) +
           theme_void()
       }
     } else {
-      plots[[groups[i]]] <- ggplot() +
+      plots[[groups[i]]] <- ggplot(data = location) +
         #geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-        geom_point(data = location, aes(x = y, y = desc(x), col = cl), size = 1) +
+        geom_point(aes(x = y, y = desc(x), col = cluster), size = 1) +
         scale_color_manual(values = col) +
         guides(color = guide_legend(title = groups[i])) +
         theme_void()

@@ -113,7 +113,6 @@ AllSpatialFeaturePlot <- function(object,
       stop("Please tell which slots of assays will be used to generate feature plots!")
     }
     exp <- as.matrix(exp)
-    pseudo_v <- min(exp[exp > 0]) / 10^6
     scale_exp <- ScaleData(exp, features = row.names(exp))
 
     location <- GetTissueCoordinates(object)
@@ -124,18 +123,18 @@ AllSpatialFeaturePlot <- function(object,
     ticaClusterName=grep("tica_snn_cluster",colnames(object@meta.data),value=TRUE)
 
     if(integreation.method == "wnn") {
-      cl <- wnnClusterName
+      cl_id <- wnnClusterName
     } else if(integreation.method == "mcia") {
-      cl <- mciaClusterName
+      cl_id <- mciaClusterName
     } else if(integreation.method == "intnmf") {
-      cl <- intnmfClusterName
+      cl_id <- intnmfClusterName
     } else if(integreation.method == "tica") {
-      cl <- ticaClusterName
+      cl_id <- ticaClusterName
     }
 
     plots <- list()
     for (i in 1:length(features)) {
-
+      cl <- setNames(object@meta.data[,cl_id], rownames(object@meta.data[cl_id]))
       scale_features <- t(scale_exp[features[i], , drop = F])
       scale_features <- cbind(location, scale_features)
       # arrange colors by Palo if not set by user

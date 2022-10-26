@@ -104,7 +104,9 @@ MultiModalIntegrationVisium <- function(object,
 
   list[["ImageFeature"]] <- if.data
 
-  list[["RGB"]] <- as.matrix(object@assays$RGB@data)
+  if ("RGB" %in% names(dataObjSimulationPCA@assays)) {
+    list[["RGB"]] <- as.matrix(object@assays$RGB@data)
+  }
   list_pos <- list()
 
   for (j in 1:length(list)) {

@@ -70,16 +70,22 @@ AllSpatialDimPlot <- function(object,
           geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
           geom_point(aes(x = y, y = desc(x), col = cluster), size = 1) +
           scale_color_manual(values = col) +
+          ggtitle(groups[i]) +
           guides(color = guide_legend(title = groups[i])) +
-          theme_void()
+          theme_void() +
+          theme(legend.position="none",
+                plot.title = element_text(hjust = 0.5))
       }
     } else {
       plots[[groups[i]]] <- ggplot(data = location) +
         #geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
         geom_point(aes(x = y, y = desc(x), col = cluster), size = 1) +
         scale_color_manual(values = col) +
+        ggtitle(groups[i]) +
         guides(color = guide_legend(title = groups[i])) +
-        theme_void()
+        theme_void() +
+        theme(legend.position="none",
+              plot.title = element_text(hjust = 0.5))
     }
   }
   return(plots)

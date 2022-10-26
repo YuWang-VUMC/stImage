@@ -30,6 +30,8 @@ AllSpatialDimPlot <- function(object,
   location <- GetTissueCoordinates(object)
 
   geneClusterName=grep("SCTPCA_cluster",colnames(object@meta.data),value=TRUE)
+  renormgeneClusterName=grep("SCTNormalizedByImagePCA_cluster",colnames(object@meta.data),value=TRUE)
+  geneSPCAClusterName=grep("SCTSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
   imageClusterName=grep("ImageFeaturePCA_cluster",colnames(object@meta.data),value=TRUE)
   RGBClusterName=grep("RGBPCA_cluster",colnames(object@meta.data),value=TRUE)
   wnnClusterName=grep("wnn_cluster",colnames(object@meta.data),value=TRUE)
@@ -37,7 +39,7 @@ AllSpatialDimPlot <- function(object,
   intnmfClusterName=grep("intnmf_snn_cluster",colnames(object@meta.data),value=TRUE)
   ticaClusterName=grep("tica_snn_cluster",colnames(object@meta.data),value=TRUE)
 
-  groups <- c(geneClusterName, imageClusterName, RGBClusterName, wnnClusterName, mciaClusterName, intnmfClusterName, ticaClusterName)
+  groups <- c(geneClusterName, renormgeneClusterName, geneSPCAClusterName, imageClusterName, RGBClusterName, wnnClusterName, mciaClusterName, intnmfClusterName, ticaClusterName)
   groups <- groups[!is.na(groups)]
 
   plots <- list()
@@ -66,7 +68,7 @@ AllSpatialDimPlot <- function(object,
 
         plots[[groups[i]]] <- ggplot() +
           geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-          geom_point(data = location, aes(x = y, y = desc(x), col = cl), size = 3) +
+          geom_point(data = location, aes(x = y, y = desc(x), col = cl), size = 1) +
           scale_color_manual(values = col) +
           guides(color = guide_legend(title = groups[i])) +
           theme_void()
@@ -74,7 +76,7 @@ AllSpatialDimPlot <- function(object,
     } else {
       plots[[groups[i]]] <- ggplot() +
         #geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-        geom_point(data = location, aes(x = y, y = desc(x), col = cl), size = 3) +
+        geom_point(data = location, aes(x = y, y = desc(x), col = cl), size = 1) +
         scale_color_manual(values = col) +
         guides(color = guide_legend(title = groups[i])) +
         theme_void()
@@ -152,7 +154,7 @@ AllSpatialFeaturePlot <- function(object,
 
           plots[[features[i]]] <- ggplot(scale_features) +
             geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-            geom_point(aes_string(x = scale_features$y, y = desc(scale_features$x), col = features[i]), size = 3) +
+            geom_point(aes_string(x = scale_features$y, y = desc(scale_features$x), col = features[i]), size = 1) +
             scale_color_viridis(option="viridis") +
             ggtitle(features[i]) +
             #scale_color_brewer(palette = "PiYG") +
@@ -165,7 +167,7 @@ AllSpatialFeaturePlot <- function(object,
       } else {
         plots[[features[i]]] <- ggplot(scale_features) +
           #geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-          geom_point(aes_string(x = scale_features$y, y = desc(scale_features$x), col = features[i]), size = 3) +
+          geom_point(aes_string(x = scale_features$y, y = desc(scale_features$x), col = features[i]), size = 1) +
           scale_color_viridis(option="viridis") +
           ggtitle(features[i]) +
           guides(color = guide_legend(title = features[i])) +

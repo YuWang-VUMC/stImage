@@ -64,7 +64,7 @@ MultimodalPreProcess <- function(object,
 
   object <- runDimReduc(
     object,
-    DimReducMethod = "PCA",
+    DimReducMethod = DimReducMethod,
     assay = assay,
     percentCut = imagePercentCut,
     pcaDim = pcaDim_i,
@@ -72,7 +72,7 @@ MultimodalPreProcess <- function(object,
   )
 
   #RGB features
-  if ("RGB" %in% Assays(object)) {
+  if ("RGB" %in% Seurat::Assays(object)) {
     message("## Working on RGB features")
 
     assay <- "RGB"

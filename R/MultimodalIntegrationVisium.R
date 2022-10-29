@@ -32,7 +32,7 @@ MultiModalIntegrationVisium <- function(object,
                                         IntNMF.nf = 20,
                                         genePercentCut=0.05,
                                         imagePercentCut=0.05,
-                                        MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA"),
+                                        MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA","Spectrum"),
                                         WnnImageWeightFactor = 1,
                                         ...) {
   normalizeMethod <- match.arg(normalizeMethod)
@@ -79,6 +79,16 @@ MultiModalIntegrationVisium <- function(object,
                               ...)
     #object <- FindClusters(object, graph.name = "wsnn", algorithm = 3, resolution = resolution, verbose = FALSE)
     #object <- RunUMAP(object, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
+  }
+
+  #Spectrum
+  if ("Spectrum" %in% MultimodalMethod) {
+    s1 <- CNN_kernel(t(dataObj@reductions[[reduction.list[[1]]]]@cell.embeddings))
+    s2 <- CNN_kernel(t(dataObj@reductions[[reduction.list[[2]]]]@cell.embeddings))
+    sIntegrated <- integrate_similarity_matrices(list(s1,s2))
+    SpectrumClusterResult <- cluster_similarity(sIntegrated,k=nCluster,clusteralg='GMM')
+    clusterColumnName=paste0("Spectrum_cluster",nCluster)
+    object@meta.data[[clusterColumnName]]=SpectrumClusterResult
   }
 
   list <- list()

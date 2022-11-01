@@ -36,7 +36,7 @@ MultiModalIntegrationVisium <- function(object,
                                         WnnImageWeightFactor = 1,
                                         ...) {
   normalizeMethod <- match.arg(normalizeMethod)
-  MultimodalMethod=match.arg(MultimodalMethod)
+  MultimodalMethod=match.arg(MultimodalMethod,several.ok =TRUE)
   message("Integration by ",paste(MultimodalMethod,collapse=";"))
 
   pcaDim_s <- min(pcaDim_s, ncol(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
@@ -85,8 +85,8 @@ MultiModalIntegrationVisium <- function(object,
 
   #Spectrum
   if ("Spectrum" %in% MultimodalMethod) {
-    s1 <- Spectrum::CNN_kernel(t(dataObj@reductions[[reduction.list[[1]]]]@cell.embeddings))
-    s2 <- Spectrum::CNN_kernel(t(dataObj@reductions[[reduction.list[[2]]]]@cell.embeddings))
+    s1 <- Spectrum::CNN_kernel(t(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
+    s2 <- Spectrum::CNN_kernel(t(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
     sIntegrated <- Spectrum::integrate_similarity_matrices(list(s1,s2))
     SpectrumClusterResult <- Spectrum::cluster_similarity(sIntegrated,k=nCluster,clusteralg='GMM')
     clusterColumnName=paste0("Spectrum_cluster",nCluster)

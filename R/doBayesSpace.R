@@ -19,7 +19,7 @@ doBayesSpace=function(dataObj,platform="ST",assay=c("SCT","Spatial","ImageFeatur
   sce <- spatialCluster(sce, q=nCluster,
                         nrep=1000, burn.in=100,
                         save.chain=TRUE)
-  dataObj@meta.data[[paste0("BayesSpace_cluster",nCluster)]]=colData(sce)$spatial.cluster
+  dataObj@meta.data[[paste0(assay,"BayesSpace_cluster",nCluster)]]=colData(sce)$spatial.cluster
 
   bayesSpaceResultChainMatrix = rhdf5::h5read(metadata(sce)$chain.h5,"z")
   colnames(bayesSpaceResultChainMatrix)=colnames(sce)
@@ -58,6 +58,7 @@ bayesSpaceChainMatrixSimilarity=function(bayesSpaceResultChainMatrix) {
   nSample=ncol(bayesSpaceResultChainMatrix)
 
   bayesSpaceResultChainMatrixSimilarityValue=combn(ncol(bayesSpaceResultChainMatrix), 2, function(x) sum(bayesSpaceResultChainMatrix[,x[1]]==bayesSpaceResultChainMatrix[,x[2]]))/nRep
+  bayesSpaceResultChainMatrixSimilarityValue[bayesSpaceResultChainMatrixSimilarityValue==1]=1-1/nRep
 
   bayesSpaceResultSimilarityMatrix=matrix(NA,ncol=nSample,nrow=nSample)
   bayesSpaceResultSimilarityMatrix[lower.tri(bayesSpaceResultSimilarityMatrix)]=bayesSpaceResultChainMatrixSimilarityValue

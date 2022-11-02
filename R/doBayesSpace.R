@@ -31,21 +31,35 @@ doBayesSpace=function(dataObj,platform="ST",assay=c("SCT","Spatial","ImageFeatur
   bayesSpaceResultSimilarity=bayesSpaceChainMatrixSimilarity(bayesSpaceResultChainMatrix)
   colnames(bayesSpaceResultSimilarity)=colnames(dataTable)
   row.names(bayesSpaceResultSimilarity)=colnames(dataTable)
-  bayesSpaceResultDist=1-bayesSpaceResultSimilarity
+  bayesSpaceResultDist=as.dist(1-bayesSpaceResultSimilarity)
 
   graphNameSimilarity=paste0(assay,"BayesSpace_Similarity_Cluster",nCluster)
   graphNameDist=paste0(assay,"BayesSpace_dist_Cluster",nCluster)
   dataObj@graphs[[graphNameSimilarity]]=bayesSpaceResultSimilarity
   dataObj@graphs[[graphNameDist]]=bayesSpaceResultDist
 
-
-  bayesSpaceResultNeighborsList=FindNeighbors(bayesSpaceResultDist)
+  #browser()
+  prune.SNN=1/15
+  bayesSpaceResultNeighborsList=FindNeighbors(bayesSpaceResultDist,
+                                              prune.SNN =prune.SNN,
+                                              force.recalc=TRUE)
   #row.names(bayesSpaceResultNeighborsList[[1]])
-
+  #browser()
   graphNameNN=paste0(assay,"BayesSpace_nn_Cluster",nCluster)
   graphNameSNN=paste0(assay,"BayesSpace_snn_Cluster",nCluster)
-  dataObj@graphs[[graphNameNN]]=bayesSpaceResultNeighborsList[["nn"]]
-  dataObj@graphs[[graphNameSNN]]=bayesSpaceResultNeighborsList[["snn"]]
+  DefaultAssay(bayesSpaceResultNeighborsList[["nn"]])=assay
+  DefaultAssay(bayesSpaceResultNeighborsList[["snn"]])=assay
+  dataObj[[graphNameNN]]=bayesSpaceResultNeighborsList[["nn"]]
+  dataObj[[graphNameSNN]]=bayesSpaceResultNeighborsList[["snn"]]
+
+
+
+
+  # neighborName=paste0(assay,"BayesSpace_Neightbor_Cluster",nCluster)
+  # dataObj@neighbors[[neighborName]]=FindNeighbors(bayesSpaceResultDist,
+  #                                                 return.neighbor=TRUE,
+  #                                                 prune.SNN =prune.SNN)
+
 
 #  dataObj <- FindNClusters(dataObj, nCluster = nCluster, graph.name = graphNameSNN,resolutionMax = 4)
   return(dataObj)

@@ -16,7 +16,7 @@ doSpectrum=function(dataObj,reduction.list=NULL,graphs=NULL,nCluster=4,clusterCo
   #integration similarity matrix
   sIntegrated <- Spectrum::integrate_similarity_matrices(similarityList)
   SpectrumClusterResult <- Spectrum::cluster_similarity(sIntegrated,k=nCluster,clusteralg='GMM')
-  object@meta.data[[clusterColumnName]]=SpectrumClusterResult
+  dataObj@meta.data[[clusterColumnName]]=SpectrumClusterResult
 
-  return(object)
+  return(dataObj)
 }

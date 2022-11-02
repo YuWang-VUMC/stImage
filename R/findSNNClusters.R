@@ -29,7 +29,7 @@ findSNNClusters <- function(object,
                             reduction.name = paste0(reduction,'UMAP'),
                             reduction.key = paste0(reduction,'UMAP_'),
                             ...) {
-  dims <- intersect(dims, 1:ncol(object@reductions[[reduction]]@cell.embeddings))
+  #dims <- intersect(dims, 1:ncol(object@reductions[[reduction]]@cell.embeddings))
   if (length(graph.name) == 1 && graph.name %in% names(object@graphs)) { #SNN graph.name exist and no need to do FindNeighbors
     message(paste0("Using ",graph.name," to FindClusters. Skipping FindNeighbors."))
     snnGraphName <- graph.name
@@ -43,20 +43,22 @@ findSNNClusters <- function(object,
   } else {
     object <- FindClusters(object, verbose = FALSE, graph.name = snnGraphName, resolution = resolution)
   }
-  if (!is.null(clusterColumnName)) { #need to store clusted result in defined clusterColumnName
+  if (!is.null(clusterColumnName)) { #need to store cluster result in defined clusterColumnName
     object@meta.data[[clusterColumnName]] <- object@meta.data[["seurat_clusters"]]
   }
-  if (!is.null(nn.name)) { #nn.name defined. Use nn.name to run RunUMAP
-    object <- RunUMAP(object,
-                      nn.name = nn.name)
-  } else { #nn.name NOT defined. Use reduction to run RunUMAP
-    object <- RunUMAP(object,
-                      reduction = reduction,
-                      dims = dims,
-                      assay = assay,
-                      reduction.name = reduction.name,
-                      reduction.key = reduction.key)
-  }
+
+  ##RunUMAP
+  # if (!is.null(nn.name)) { #nn.name defined. Use nn.name to run RunUMAP
+  #   object <- RunUMAP(object,
+  #                     nn.name = nn.name)
+  # } else { #nn.name NOT defined. Use reduction to run RunUMAP
+  #   object <- RunUMAP(object,
+  #                     reduction = reduction,
+  #                     dims = dims,
+  #                     assay = assay,
+  #                     reduction.name = reduction.name,
+  #                     reduction.key = reduction.key)
+  # }
 
   return(object)
 }

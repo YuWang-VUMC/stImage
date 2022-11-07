@@ -28,6 +28,7 @@ findSNNClusters <- function(object,
                             clusterColumnName=if (!is.null(nCluster)) paste0(reduction,"_cluster",nCluster) else NULL,
                             reduction.name = paste0(reduction,'UMAP'),
                             reduction.key = paste0(reduction,'UMAP_'),
+                            RunUMAP=TRUE,
                             ...) {
   #dims <- intersect(dims, 1:ncol(object@reductions[[reduction]]@cell.embeddings))
   if (length(graph.name) == 1 && graph.name %in% names(object@graphs)) { #SNN graph.name exist and no need to do FindNeighbors
@@ -47,18 +48,20 @@ findSNNClusters <- function(object,
     object@meta.data[[clusterColumnName]] <- object@meta.data[["seurat_clusters"]]
   }
 
-  ##RunUMAP
-  # if (!is.null(nn.name)) { #nn.name defined. Use nn.name to run RunUMAP
-  #   object <- RunUMAP(object,
-  #                     nn.name = nn.name)
-  # } else { #nn.name NOT defined. Use reduction to run RunUMAP
-  #   object <- RunUMAP(object,
-  #                     reduction = reduction,
-  #                     dims = dims,
-  #                     assay = assay,
-  #                     reduction.name = reduction.name,
-  #                     reduction.key = reduction.key)
-  # }
+  #RunUMAP
+  if (RunUMAP) {
+    if (!is.null(nn.name)) { #nn.name defined. Use nn.name to run RunUMAP
+      object <- RunUMAP(object,
+                        nn.name = nn.name)
+    } else { #nn.name NOT defined. Use reduction to run RunUMAP
+      object <- RunUMAP(object,
+                        reduction = reduction,
+                        dims = dims,
+                        assay = assay,
+                        reduction.name = reduction.name,
+                        reduction.key = reduction.key)
+    }
+  }
 
   return(object)
 }

@@ -1,5 +1,9 @@
 
-doSpectrum=function(dataObj,reduction.list=NULL,graphs=NULL,nCluster=4,clusterColumnName=paste0("Spectrum_cluster",nCluster)) {
+doSpectrum=function(dataObj,
+                    reduction.list=NULL,graphs=NULL,
+                    clusterEachModality=TRUE,
+                    nCluster=4,
+                    clusterColumnName=paste0("Spectrum_Cluster",nCluster)) {
   if (is.null(reduction.list) & is.null(graphs)) {
     stop("Need define at least one reduction.list or one graphs")
   }
@@ -11,6 +15,18 @@ doSpectrum=function(dataObj,reduction.list=NULL,graphs=NULL,nCluster=4,clusterCo
     }
   } else if (!is.null(graphs)) {  #defined graphs. get similarity from graphs
     similarityList=dataObj@graphs[graphs]
+  }
+
+  if (clusterEachModality) { #doing single cluster
+    for (i in 1:length(similarityList)) {
+      clusterResult=Spectrum::cluster_similarity(similarityList[[i]],k=nCluster,clusteralg='GMM')
+      if (!is.null(reduction.list)) {
+        clusterColumnNameSingle=paste0(reduction.list[[i]],"Spectrum_Cluster",nCluster)
+      } else {
+        clusterColumnNameSingle=paste0(graphs[i],"Spectrum_Cluster",nCluster)
+      }
+      dataObj@meta.data[[clusterColumnNameSingle]]=clusterResult
+    }
   }
 
   #integration similarity matrix

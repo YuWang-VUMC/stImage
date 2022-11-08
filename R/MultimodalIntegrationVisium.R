@@ -85,12 +85,13 @@ MultiModalIntegrationVisium <- function(object,
 
   #Spectrum
   if ("Spectrum" %in% MultimodalMethod) {
-    s1 <- Spectrum::CNN_kernel(t(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
-    s2 <- Spectrum::CNN_kernel(t(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
-    sIntegrated <- Spectrum::integrate_similarity_matrices(list(s1,s2))
-    SpectrumClusterResult <- Spectrum::cluster_similarity(sIntegrated,k=nCluster,clusteralg='GMM')
-    clusterColumnName=paste0("Spectrum_cluster",nCluster)
-    object@meta.data[[clusterColumnName]]=SpectrumClusterResult
+    # s1 <- Spectrum::CNN_kernel(t(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
+    # s2 <- Spectrum::CNN_kernel(t(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
+    # sIntegrated <- Spectrum::integrate_similarity_matrices(list(s1,s2))
+    # SpectrumClusterResult <- Spectrum::cluster_similarity(sIntegrated,k=nCluster,clusteralg='GMM')
+    # clusterColumnName=paste0("Spectrum_cluster",nCluster)
+    # object@meta.data[[clusterColumnName]]=SpectrumClusterResult
+    object=doSpectrum(object,reduction.list=reduction.list,nCluster=nCluster)
   }
 
   list <- list()

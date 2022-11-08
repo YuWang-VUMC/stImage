@@ -52,8 +52,11 @@ findSNNClusters <- function(object,
   if (RunUMAP) {
     if (!is.null(nn.name)) { #nn.name defined. Use nn.name to run RunUMAP
       object <- RunUMAP(object,
-                        nn.name = nn.name)
+                        nn.name = nn.name,
+                        reduction.name = reduction.name,
+                        reduction.key = reduction.key)
     } else { #nn.name NOT defined. Use reduction to run RunUMAP
+      dims=intersect(dims,c(1:ncol(object[[reduction]])))
       object <- RunUMAP(object,
                         reduction = reduction,
                         dims = dims,

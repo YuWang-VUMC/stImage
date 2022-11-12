@@ -3,7 +3,11 @@ doSpectrum=function(dataObj,
                     reduction.list=NULL,graphs=NULL,
                     clusterEachModality=TRUE,
                     nCluster=4,
-                    clusterColumnName=paste0("Spectrum_Cluster",nCluster)) {
+                    clusterColumnName=paste0("Spectrum_Cluster",nCluster),
+                    integrated.name="SpectrumIntegrated_Similarity",
+                    nn.name="SpectrumNeighbor",
+                    reduction.name = paste0(nn.name,'UMAP'),
+                    reduction.key = paste0(nn.name,'UMAP_')) {
   if (is.null(reduction.list) & is.null(graphs)) {
     stop("Need define at least one reduction.list or one graphs")
   }
@@ -33,6 +37,15 @@ doSpectrum=function(dataObj,
   sIntegrated <- Spectrum::integrate_similarity_matrices(similarityList)
   SpectrumClusterResult <- Spectrum::cluster_similarity(sIntegrated,k=nCluster,clusteralg='GMM')
   dataObj@meta.data[[clusterColumnName]]=SpectrumClusterResult
+
+  dataObj@graphs[[integrated.name]]=sIntegrated
+  #get NeighborObj for umap
+  objNeighbor=distToNeighborObj(1-sIntegrated,k.param=20)
+  dataObj@neighbors[[nn.name]]=objNeighbor
+  dataObj <- RunUMAP(dataObj,
+                     nn.name = nn.name,
+                     reduction.name = reduction.name,
+                     reduction.key = reduction.key)
 
   return(dataObj)
 }

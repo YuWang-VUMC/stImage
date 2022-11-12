@@ -26,8 +26,8 @@ findSNNClusters <- function(object,
                             assay = DefaultAssay(object),
                             nCluster = NULL,
                             clusterColumnName=if (!is.null(nCluster)) paste0(reduction,"_cluster",nCluster) else NULL,
-                            reduction.name = paste0(reduction,'UMAP'),
-                            reduction.key = paste0(reduction,'UMAP_'),
+                            reduction.name =ifelse(!is.null(reduction),paste0(reduction,'UMAP'),paste0(nn.name,'UMAP')),
+                            reduction.key = ifelse(!is.null(reduction),paste0(reduction,'UMAP_'),paste0(nn.name,'UMAP_')),
                             RunUMAP=TRUE,
                             ...) {
   #dims <- intersect(dims, 1:ncol(object@reductions[[reduction]]@cell.embeddings))

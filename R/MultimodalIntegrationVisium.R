@@ -71,7 +71,7 @@ MultiModalIntegrationVisium <- function(object,
       )
     }
     object <- findSNNClusters(object,
-                              reduction  = reduction.list[[1]],
+                              reduction  = NULL,
                               graph.name = "wsnn",
                               algorithm = 3,
                               nCluster = nCluster,

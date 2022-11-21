@@ -15,12 +15,19 @@ doBayesSpace=function(dataObj,platform=c("ST","Visium"),
 
   #sce <- as.SingleCellExperiment(dataObj)
 
-  platform=match.arg(platform)
   assay=match.arg(assay)
 
-  colData <- dataObj@images$images@coordinates
+  #platform=match.arg(platform)
+  colData <- dataObj@images[[1]]@coordinates
+  if (("imagecol" %in% colnames(colData)) & "imagerow" %in% colnames(colData) ) { #10X Visum data
+    colData <- colData[,c("row","col")]   #still use row, not imagerow for BayesSpace
+    platform="Visium"
+  } else { #ST data
+    platform="ST"
+  }
   colnames(colData)=gsub("y","row",colnames(colData))
   colnames(colData)=gsub("x","col",colnames(colData))
+
 
   dataTable=as.matrix(dataObj[[assay]]@data)
   sce <- SingleCellExperiment::SingleCellExperiment(assays=list(logcounts=dataTable),

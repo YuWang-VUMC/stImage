@@ -34,8 +34,12 @@ runDimReduc <- function(object,
     featureExpressionN <- apply(object[[assay]]@counts, 1, function(x) length(which(x>0)))
     rawcountFiltered <- rawcount[which(featureExpressionN > min.loctions), ]
     rawcountFiltered <- rawcountFiltered[ , which(colSums(rawcountFiltered) > 0)]
-    location <- as.matrix(object@images$images@coordinates)
-    locationFiltered <- location[colnames(rawcountFiltered), ]
+    location <- as.matrix(object@images[[1]]@coordinates)
+    if (("imagecol" %in% colnames(location)) & "imagerow" %in% colnames(location) ) { #10X Visum data
+      locationFiltered <- location[colnames(rawcountFiltered),c("imagecol","imagerow")]
+    } else { #ST data
+      locationFiltered <- location[colnames(rawcountFiltered), ]
+    }
 
     ##Can't use CreateSpatialPCAObject here as it will use SCTransform for normalization ,which is not good for image features
     ##Use @scale.data directly

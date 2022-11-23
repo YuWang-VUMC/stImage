@@ -106,7 +106,7 @@ NormalizeGeneByImage <- function(dataObj,
   #Location distance of spots
   message("find coordinate neighbor...")
   if (is.null(spotsCoordinate)) {
-    spotsCoordinate <- dataObj@images$images@coordinates
+    spotsCoordinate <- dataObj@images[[1]]@coordinates
   }
   spotToNeighborList <- FindCoordinateNeighbor(spotsCoordinate, n = coordinateNeighborN)
 
@@ -130,7 +130,7 @@ NormalizeGeneByImage <- function(dataObj,
   if (!is.null(geneDimReducName)) { #Need update PCA
     newGeneDimReducName <- paste0(geneDimReducName, "NormalizedByImage")
     dataObj[[newGeneDimReducName]] <- CreateDimReducObject(embeddings = t(geneExpByNeighbor), key = "PC_", assay = assay)
-    message(paste0("Normalized gene PCs were added to ", newGeneDimReducName))
+    message(paste0("Smoothed gene PCs were added to ", newGeneDimReducName))
 
   } else { #Need update gene expression
     geneExpByNeighborAssay <- dataObj[[assay]]
@@ -145,7 +145,7 @@ NormalizeGeneByImage <- function(dataObj,
     dataObj[[newAssayName]] <- geneExpByNeighborAssay
 
     DefaultAssay(dataObj) <- newAssayName
-    message(paste("Set default assay to ", newAssayName))
+    message(paste("Smoothed gene expression was stored and set default assay to ", newAssayName))
   }
 
   return(dataObj)

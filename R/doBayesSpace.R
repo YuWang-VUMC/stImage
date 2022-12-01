@@ -15,7 +15,7 @@ doBayesSpace=function(dataObj,platform=c("ST","Visium"),
 
   #sce <- as.SingleCellExperiment(dataObj)
 
-  assay=match.arg(assay)
+  #assay=match.arg(assay)
 
   #platform=match.arg(platform)
   colData <- dataObj@images[[1]]@coordinates

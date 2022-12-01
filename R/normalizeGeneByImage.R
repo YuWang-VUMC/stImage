@@ -79,23 +79,33 @@ NormalizeGeneByImage <- function(dataObj,
                                  ipcaObj = NULL,
                                  imageDimReducName = "ImageFeaturePCA",
                                  pcaDim_i = 30,
-                                 distanceMethod = "cosine",
-                                 spotsCoordinate = NULL,
-                                 coordinateNeighborN = 4,
-                                 geneExp = NULL,
                                  geneDimReducName = NULL,
+                                 pcaDim_g = 30,
+                                 distanceMethod = c("cosine","euclidean"),
+                                 spotsCoordinate = NULL,
+                                 platform = ifelse("platform" %in% names(dataObj@misc),
+                                                   dataObj@misc$platform,
+                                                   "Visum"),
+                                 geneExp = NULL,
+                                 normalizePC = FALSE,
                                  assay = "SCT",
-                                 dataSlot = c("data", "scale.data")
+                                 dataSlot = c("counts","data", "scale.data")
                                  ) {
 
+  coordinateNeighborN = 6
+  if (platform=="ST") {
+    coordinateNeighborN = 4
+  }
   #distance based on Image PCs
-  message("Similarity by image features...")
+  message("Similarity by image feature PCs ...")
   if (is.null(ipcaObj)) {
     imageFeaturePCs <- t(dataObj[[imageDimReducName]]@cell.embeddings[ ,1:pcaDim_i])
   } else {
     imageFeaturePCs <- t(ipcaObj@cell.embeddings[ , 1:pcaDim_i])
   }
+
   #distanceMethod=c("euclidean")
+  distanceMethod=match.arg(distanceMethod)
   if (distanceMethod == "cosine") {
     spotsImageSimilarity <- lsa::cosine(imageFeaturePCs)
   } else if (distanceMethod == "euclidean") {
@@ -103,17 +113,37 @@ NormalizeGeneByImage <- function(dataObj,
   }
   spotsImageSimilarity[spotsImageSimilarity < 0] <- 0
 
+  if (!is.null(geneDimReducName)) { #consider gene level correlation in weight, see stLearn code
+    message("Similarity by gene PCs ...")
+    genePCs <- t(dataObj[[geneDimReducName]]@cell.embeddings[ ,1:pcaDim_g])
+    spotsGeneSimilarity <- Rfast2::dcora(genePCs)
+  } else {
+    spotsGeneSimilarity=1
+  }
+  spotsImageSimilarity=spotsImageSimilarity*spotsGeneSimilarity
+
   #Location distance of spots
   message("find coordinate neighbor...")
   if (is.null(spotsCoordinate)) {
     spotsCoordinate <- dataObj@images[[1]]@coordinates
+    if (("imagecol" %in% colnames(spotsCoordinate)) & "imagerow" %in% colnames(spotsCoordinate) ) { #10X Visum data
+      #this is too large and slow, still use row and col
+      #spotsCoordinate <- spotsCoordinate[,c("imagerow","imagecol")]
+      spotsCoordinate <- spotsCoordinate[,c("row","col")]
+      platform="Visium"
+    } else if (("row" %in% colnames(spotsCoordinate)) & "col" %in% colnames(spotsCoordinate) ) { #ST
+      spotsCoordinate <- spotsCoordinate[,c("row","col")]
+      platform="ST"
+    } else {
+      stop("Can't find imagerow/imagecol or row/col in spotsCoordinate")
+    }
   }
   spotToNeighborList <- FindCoordinateNeighbor(spotsCoordinate, n = coordinateNeighborN)
 
   #Normalization
   message("Normalization...")
   if (is.null(geneExp)) { #use geneExp from object
-    if (!is.null(geneDimReducName)) { #Normalization PCA
+    if (normalizePC) { #Normalization PCA
       geneExp <- t(dataObj[[geneDimReducName]]@cell.embeddings)
     } else { #Normalization gene
       dataSlot <- match.arg(dataSlot)
@@ -127,7 +157,7 @@ NormalizeGeneByImage <- function(dataObj,
 
   #return(geneExpByNeighbor)
 
-  if (!is.null(geneDimReducName)) { #Need update PCA
+  if (normalizePC) { #Need update PCA
     newGeneDimReducName <- paste0(geneDimReducName, "NormalizedByImage")
     dataObj[[newGeneDimReducName]] <- CreateDimReducObject(embeddings = t(geneExpByNeighbor), key = "PC_", assay = assay)
     message(paste0("Smoothed gene PCs were added to ", newGeneDimReducName))
@@ -137,15 +167,31 @@ NormalizeGeneByImage <- function(dataObj,
     geneExpByNeighborAssay <- SetAssayData(object = geneExpByNeighborAssay,
                                            slot = dataSlot,
                                            new.data = geneExpByNeighbor)
-    if (dataSlot=="data") { #need update scale.data
+    if (dataSlot=="data") { #need update scale.data and count
+      #scale.data slot
       geneExpByNeighborAssay <- FindVariableFeatures(geneExpByNeighborAssay)
       geneExpByNeighborAssay <- geneExpByNeighborAssay %>% ScaleData()
+      #counts slot
+      geneExpByNeighborAssay <- SetAssayData(object = geneExpByNeighborAssay,
+                                             slot = "counts",
+                                             new.data = round(exp(geneExpByNeighbor)-1))
+    } else if (dataSlot=="counts") {  #need update scale.data and data
+      #data slot
+      geneExpByNeighborAssay <- SetAssayData(object = geneExpByNeighborAssay,
+                                             slot = "data",
+                                             new.data = log1p(geneExpByNeighbor))
+      #scale.data slot
+      geneExpByNeighborAssay <- FindVariableFeatures(geneExpByNeighborAssay)
+      geneExpByNeighborAssay <- geneExpByNeighborAssay %>% ScaleData()
+    } else { #dataSlot=="scale.data"
+      warning("dataSlot=='scale.data', data and counts were NOT normalized by Image")
     }
+
     newAssayName <- paste0(assay,"NormalizedByImage")
     dataObj[[newAssayName]] <- geneExpByNeighborAssay
 
     DefaultAssay(dataObj) <- newAssayName
-    message(paste("Smoothed gene expression was stored and set default assay to ", newAssayName))
+    message(paste0("Gene expression in slot ",dataSlot," was normlized, stored, and set default assay to ", newAssayName))
   }
 
   return(dataObj)

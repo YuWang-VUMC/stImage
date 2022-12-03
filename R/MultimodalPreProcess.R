@@ -27,7 +27,42 @@ MultimodalPreProcess <- function(object,
   normalizeMethod <- match.arg(normalizeMethod)
   DimReducMethod <- match.arg(DimReducMethod)
 
-  #gene level
+  #data filtering at raw data level
+  message("## Data filtering at raw level")
+  ### gene level
+  assay="Spatial"
+  percentCut=genePercentCut
+
+  minValue=min(object[[assay]]@counts)
+  if (minValue!=0) {
+    warning(paste0("Min value in ",assay," is not equal to 0. Need to confirm data filtering by >=",minValue,
+    " percent is correct!"))
+  }
+  geneExpressionPercent <- apply(object[[assay]]@counts, 1, function(x) length(which(x>minValue)) / length(x))
+  geneToKept=names(which(geneExpressionPercent>=percentCut))
+  message(paste0("## ",length(geneExpressionPercent)-length(geneToKept)," features in ",assay," assay were removed. ",length(geneToKept)," kept."))
+  #can only do this because object is new and no information in data
+  object[[assay]]@counts=object[[assay]]@counts[geneToKept,]
+  object[[assay]]@data=object[[assay]]@data[geneToKept,]
+
+
+  ###ImageFeature
+  assay="ImageFeature"
+  percentCut=imagePercentCut
+
+  minValue=min(object[[assay]]@counts)
+  if (minValue!=0) {
+    warning(paste0("Min value in ",assay," is not equal to 0. Need to confirm data filtering by >=",minValue,
+                   " percent is correct!"))
+  }
+  geneExpressionPercent <- apply(object[[assay]]@counts, 1, function(x) length(which(x>minValue)) / length(x))
+  geneToKept=names(which(geneExpressionPercent>=percentCut))
+  message(paste0("## ",length(geneExpressionPercent)-length(geneToKept)," features in ",assay," assay were removed. ",length(geneToKept)," kept."))
+  #can only do this because object is new and no information in data
+  object[[assay]]@counts=object[[assay]]@counts[geneToKept,]
+  object[[assay]]@data=object[[assay]]@data[geneToKept,]
+
+  #gene processing
   message("## Working on gene expression")
   DefaultAssay(object) <- "Spatial"
   if (normalizeMethod == "SCT") {
@@ -52,7 +87,7 @@ MultimodalPreProcess <- function(object,
     ...
   )
 
-  #image level
+  #image processing
   message("## Working on image features")
   assay <- "ImageFeature"
   DefaultAssay(object) <- assay
@@ -71,7 +106,7 @@ MultimodalPreProcess <- function(object,
     ...
   )
 
-  #RGB features
+  #RGB features processing
   if ("RGB" %in% Seurat::Assays(object)) {
     message("## Working on RGB features")
 

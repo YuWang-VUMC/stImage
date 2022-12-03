@@ -89,39 +89,18 @@ NormalizeGeneByImage <- function(dataObj,
                                  geneExp = NULL,
                                  normalizePC = FALSE,
                                  assay = "SCT",
-                                 dataSlot = c("counts","data", "scale.data")
+                                 dataSlot = c("counts","data", "scale.data"),
+                                 weights=c("weights_matrix_all",
+                                           "weights_matrix_pd_md",
+                                           "physical_distance")
                                  ) {
+
+  weights=match.arg(weights)
 
   coordinateNeighborN = 6
   if (platform=="ST") {
     coordinateNeighborN = 4
   }
-  #distance based on Image PCs
-  message("Similarity by image feature PCs ...")
-  if (is.null(ipcaObj)) {
-    imageFeaturePCs <- t(dataObj[[imageDimReducName]]@cell.embeddings[ ,1:pcaDim_i])
-  } else {
-    imageFeaturePCs <- t(ipcaObj@cell.embeddings[ , 1:pcaDim_i])
-  }
-
-  #distanceMethod=c("euclidean")
-  distanceMethod=match.arg(distanceMethod)
-  if (distanceMethod == "cosine") {
-    spotsImageSimilarity <- lsa::cosine(imageFeaturePCs)
-  } else if (distanceMethod == "euclidean") {
-    spotsImageSimilarity <- 1 - dist(imageFeaturePCs)
-  }
-  spotsImageSimilarity[spotsImageSimilarity < 0] <- 0
-
-  if (!is.null(geneDimReducName)) { #consider gene level correlation in weight, see stLearn code
-    message("Similarity by gene PCs ...")
-    genePCs <- t(dataObj[[geneDimReducName]]@cell.embeddings[ ,1:pcaDim_g])
-    spotsGeneSimilarity <- Rfast2::dcora(genePCs)
-  } else {
-    spotsGeneSimilarity=1
-  }
-  spotsImageSimilarity=spotsImageSimilarity*spotsGeneSimilarity
-
   #Location distance of spots
   message("find coordinate neighbor...")
   if (is.null(spotsCoordinate)) {
@@ -140,6 +119,39 @@ NormalizeGeneByImage <- function(dataObj,
   }
   spotToNeighborList <- FindCoordinateNeighbor(spotsCoordinate, n = coordinateNeighborN)
 
+  if (weights=="physical_distance") { #only need normlization based on physical_distance
+    message("Only use physical_distance for smoothing ...")
+    spotsImageSimilarity=matrix(1,ncol=length(spotToNeighborList),nrow=length(spotToNeighborList))
+    row.names(spotsImageSimilarity)=names(spotToNeighborList)
+    colnames(spotsImageSimilarity)=names(spotToNeighborList)
+  } else { #need normlization based on image or gene similarity
+    #distance based on Image PCs
+    message("Similarity by image feature PCs ...")
+    if (is.null(ipcaObj)) {
+      imageFeaturePCs <- t(dataObj[[imageDimReducName]]@cell.embeddings[ ,1:pcaDim_i])
+    } else {
+      imageFeaturePCs <- t(ipcaObj@cell.embeddings[ , 1:pcaDim_i])
+    }
+
+    #distanceMethod=c("euclidean")
+    distanceMethod=match.arg(distanceMethod)
+    if (distanceMethod == "cosine") {
+      spotsImageSimilarity <- lsa::cosine(imageFeaturePCs)
+    } else if (distanceMethod == "euclidean") {
+      spotsImageSimilarity <- 1 - dist(imageFeaturePCs)
+    }
+    spotsImageSimilarity[spotsImageSimilarity < 0] <- 0
+
+    if (weights=="weights_matrix_all") { #consider gene level correlation in weight, see stLearn code
+      message("Similarity by gene PCs ...")
+      genePCs <- t(dataObj[[geneDimReducName]]@cell.embeddings[ ,1:pcaDim_g])
+      spotsGeneSimilarity <- Rfast2::dcora(genePCs)
+    } else {
+      spotsGeneSimilarity=1
+    }
+    spotsImageSimilarity=spotsImageSimilarity*spotsGeneSimilarity
+  }
+
   #Normalization
   message("Normalization...")
   if (is.null(geneExp)) { #use geneExp from object
@@ -155,7 +167,12 @@ NormalizeGeneByImage <- function(dataObj,
                                                 spotToNeighborList,
                                                 spotsImageSimilarity)
 
+  if (dataSlot=="counts") {
+    geneExpByNeighbor=round(geneExpByNeighbor)
+    geneExpByNeighbor=as(geneExpByNeighbor,"dgCMatrix")
+  }
   #return(geneExpByNeighbor)
+  #browser()
 
   if (normalizePC) { #Need update PCA
     newGeneDimReducName <- paste0(geneDimReducName, "NormalizedByImage")

@@ -22,10 +22,15 @@ MultimodalPreProcess <- function(object,
                                  pcaDim_c = 6,
                                  DimReducMethod = c("PCA", "SpatialPCA"),
                                  genePercentCut=0.05,
+                                 customGenes=NULL,
                                  imagePercentCut=0.05,
                                  ...) {
   normalizeMethod <- match.arg(normalizeMethod)
   DimReducMethod <- match.arg(DimReducMethod)
+
+  if (!is.null(customGenes)) {
+    message("customGenes defined and wil be used for analysis. FindVariableFeatures will not be performed.")
+  }
 
   #data filtering at raw data level
   message("## Data filtering at raw level")
@@ -68,13 +73,21 @@ MultimodalPreProcess <- function(object,
   if (normalizeMethod == "SCT") {
     assay <- "SCT"
     object <-
-      SCTransform(object, assay = "Spatial", verbose = FALSE)
+      SCTransform(object, assay = "Spatial", verbose = FALSE,residual.features=customGenes)
     DefaultAssay(object) <- "SCT"
   } else if (normalizeMethod == "log") {
     assay <- "Spatial"
-    object <- NormalizeData(object) %>%
-      FindVariableFeatures() %>%
-      ScaleData()
+    # object <- NormalizeData(object) %>%
+    #   FindVariableFeatures() %>%
+    #   ScaleData()
+    object <- NormalizeData(object)
+    if (!is.null(customGenes)) {
+      VariableFeatures(object)=customGenes
+    } else {
+      object=FindVariableFeatures(object)
+    }
+    object=ScaleData(object)
+
   } else {
     stop(paste0("normalizeMethod has to be SCT or log"))
   }
@@ -84,6 +97,7 @@ MultimodalPreProcess <- function(object,
     assay = assay,
     percentCut = genePercentCut,
     pcaDim = pcaDim_s,
+    customGenes=customGenes,
     ...
   )
 

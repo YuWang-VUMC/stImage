@@ -14,10 +14,12 @@ doSpark <- function(object,
                                percentage = genePercentCut,
                                min_total_counts = min_total_counts)
     spark@lib_size <- apply(spark@counts, 2, sum)
+    #browser()
     spark <- spark.vc(spark,
                       covariates = NULL,
                       lib_size = spark@lib_size,
                       num_core = n.core,
+                      fit.model="gaussian",
                       verbose = F)
     spark <- spark.test(spark,
                         check_positive = T,

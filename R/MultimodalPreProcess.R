@@ -29,7 +29,7 @@ MultimodalPreProcess <- function(object,
   DimReducMethod <- match.arg(DimReducMethod)
 
   if (!is.null(customGenes)) {
-    message("customGenes defined and wil be used for analysis. FindVariableFeatures will not be performed.")
+    message("## customGenes defined and wil be used for analysis. FindVariableFeatures will not be performed.")
   }
 
   #data filtering at raw data level

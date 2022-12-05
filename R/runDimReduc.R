@@ -52,8 +52,9 @@ runDimReduc <- function(object,
                    counts = rawcountFiltered,
                    location = locationFiltered,
                   project = object@project.name)
-    if (is.null(customGenes)) {
+    if (!is.null(customGenes)) {
       VariableFeatures(object)=intersect(row.names(rawcountFiltered), customGenes)
+      message(paste0(length(customGenes)," customGenes defined and ",length(VariableFeatures(object))," were overlapped with filtered data and used as features for SpatialPCA"))
     }
     SPCAobj@normalized_expr <- object[[assay]]@scale.data[intersect(row.names(rawcountFiltered), VariableFeatures(object)), ]
     SPCAobj <- SpatialPCAWorkflow(SPCAobj, SpatialPCnum = pcaDim)

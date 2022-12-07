@@ -169,7 +169,7 @@ NormalizeGeneByImage <- function(dataObj,
 
   if (dataSlot=="counts") {
     geneExpByNeighbor=round(geneExpByNeighbor)
-    geneExpByNeighbor=as(geneExpByNeighbor,"dgCMatrix")
+    geneExpByNeighbor=as.matrix(geneExpByNeighbor)
   }
   #return(geneExpByNeighbor)
   #browser()

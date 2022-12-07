@@ -169,7 +169,7 @@ NormalizeGeneByImage <- function(dataObj,
 
   if (dataSlot=="counts") {
     geneExpByNeighbor=round(geneExpByNeighbor)
-    geneExpByNeighbor=as.matrix(geneExpByNeighbor)
+    geneExpByNeighbor=as(geneExpByNeighbor,"dgCMatrix")
   }
   #return(geneExpByNeighbor)
   #browser()
@@ -183,7 +183,7 @@ NormalizeGeneByImage <- function(dataObj,
     geneExpByNeighborAssay <- dataObj[[assay]]
     geneExpByNeighborAssay <- SetAssayData(object = geneExpByNeighborAssay,
                                            slot = dataSlot,
-                                           new.data = geneExpByNeighbor)
+                                           new.data = as.matrix(geneExpByNeighbor))
     if (dataSlot=="data") { #need update scale.data and count
       #scale.data slot
       geneExpByNeighborAssay <- FindVariableFeatures(geneExpByNeighborAssay)
@@ -191,12 +191,12 @@ NormalizeGeneByImage <- function(dataObj,
       #counts slot
       geneExpByNeighborAssay <- SetAssayData(object = geneExpByNeighborAssay,
                                              slot = "counts",
-                                             new.data = round(exp(geneExpByNeighbor)-1))
+                                             new.data = round(exp(as.matrix(geneExpByNeighbor))-1))
     } else if (dataSlot=="counts") {  #need update scale.data and data
       #data slot
       geneExpByNeighborAssay <- SetAssayData(object = geneExpByNeighborAssay,
                                              slot = "data",
-                                             new.data = log1p(geneExpByNeighbor))
+                                             new.data = log1p(as.matrix(geneExpByNeighbor)))
       #scale.data slot
       geneExpByNeighborAssay <- FindVariableFeatures(geneExpByNeighborAssay)
       geneExpByNeighborAssay <- geneExpByNeighborAssay %>% ScaleData()

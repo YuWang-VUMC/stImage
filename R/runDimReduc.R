@@ -15,15 +15,20 @@ runDimReduc <- function(object,
                         DimReducMethod = "PCA",
                         assay = "SCT",
                         percentCut = 0.05,
-                        pcaDim=30,...) {
+                        pcaDim=30,
+                        customGenes=NULL,...) {
 
   DimReducName <- paste0(assay, "", DimReducMethod)
   DimReducKeyName <- paste0(DimReducName, "_")
 
   if(DimReducMethod == "PCA") {
-    #remove less frequent genes
-    geneExpressionPercent <- apply(object[[assay]]@counts, 1, function(x) length(which(x>0)) / length(x))
-    VariableFeatures(object) <- setdiff(VariableFeatures(object), names(which(geneExpressionPercent <= percentCut)))
+    if (is.null(customGenes)) {
+      #remove less frequent genes
+      geneExpressionPercent <- apply(object[[assay]]@counts, 1, function(x) length(which(x>0)) / length(x))
+      VariableFeatures(object) <- setdiff(VariableFeatures(object), names(which(geneExpressionPercent <= percentCut)))
+    } else {
+      VariableFeatures(object) <- intersect(customGenes,row.names(object[[assay]]@counts))
+    }
 
     object <- RunPCA(object, assay = assay, npcs = pcaDim, verbose = FALSE,
                      reduction.name = DimReducName,reduction.key = DimReducKeyName)
@@ -47,6 +52,10 @@ runDimReduc <- function(object,
                    counts = rawcountFiltered,
                    location = locationFiltered,
                   project = object@project.name)
+    if (!is.null(customGenes)) {
+      VariableFeatures(object)=intersect(row.names(rawcountFiltered), customGenes)
+      message(paste0(length(customGenes)," customGenes defined and ",length(VariableFeatures(object))," were overlapped with filtered data and used as features for SpatialPCA"))
+    }
     SPCAobj@normalized_expr <- object[[assay]]@scale.data[intersect(row.names(rawcountFiltered), VariableFeatures(object)), ]
     SPCAobj <- SpatialPCAWorkflow(SPCAobj, SpatialPCnum = pcaDim)
     SPCApcs <- t(SPCAobj@SpatialPCs)

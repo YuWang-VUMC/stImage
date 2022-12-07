@@ -25,6 +25,7 @@ findSNNClusters <- function(object,
                             resolution=0.8,
                             assay = DefaultAssay(object),
                             nCluster = NULL,
+                            k.param=20,
                             clusterColumnName=if (!is.null(nCluster)) paste0(reduction,"_cluster",nCluster) else NULL,
                             reduction.name =ifelse(!is.null(reduction),paste0(reduction,'UMAP'),paste0(nn.name,'UMAP')),
                             reduction.key = ifelse(!is.null(reduction),paste0(reduction,'UMAP_'),paste0(nn.name,'UMAP_')),
@@ -36,7 +37,7 @@ findSNNClusters <- function(object,
     snnGraphName <- graph.name
   } else {
     dims=intersect(dims,1:ncol(object@reductions[[reduction]]@cell.embeddings))
-    object <- FindNeighbors(object, reduction = reduction, graph.name = graph.name, dims = dims)
+    object <- FindNeighbors(object, reduction = reduction, graph.name = graph.name, dims = dims,k.param=k.param)
     snnGraphName <- graph.name[2]
   }
   if (!is.null(nCluster)) { #have target nCluster number

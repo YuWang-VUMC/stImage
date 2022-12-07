@@ -45,7 +45,7 @@ AllSpatialDimPlot <- function(object,
   plots <- list()
   for (i in 1:length(groups)) {
     cl <- setNames(object@meta.data[,groups[i]], rownames(object@meta.data[groups[i]]))
-    location$cluster <- cl
+    location$cluster <- as.factor(cl)
     # arrange colors by Palo if not set by user
     pal <- gg_color_hue(length(unique(cl)))
     palopal <- Palo(location, cl, pal)
@@ -58,7 +58,7 @@ AllSpatialDimPlot <- function(object,
         stop("Must provide the cluster ids when setting cluster.frame == True!")
       } else {
         # get cluster frame with sf
-        p <- st_as_sf(data.frame(x=location$y, y=desc(location$x), A=1:nrow(location)), coords=1:2)
+        p <- st_as_sf(data.frame(x=location$y, y=dplyr::desc(location$x), A=1:nrow(location)), coords=1:2)
         v <- st_voronoi_point(p)
         hull <- st_convex_hull(st_union(p))
 
@@ -68,7 +68,7 @@ AllSpatialDimPlot <- function(object,
 
         plots[[groups[i]]] <- ggplot(data = location) +
           geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-          geom_point(aes(x = y, y = desc(x), col = cluster), size = 1) +
+          geom_point(aes_string(x = location$y, y = dplyr::desc(location$x), col = location$cluster), size = 1) +
           scale_color_manual(values = col) +
           ggtitle(groups[i]) +
           guides(color = guide_legend(title = groups[i])) +
@@ -79,7 +79,7 @@ AllSpatialDimPlot <- function(object,
     } else {
       plots[[groups[i]]] <- ggplot(data = location) +
         #geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-        geom_point(aes(x = y, y = desc(x), col = cluster), size = 1) +
+        geom_point(aes_string(x = location$y, y = dplyr::desc(location$x), col = location$cluster), size = 1) +
         scale_color_manual(values = col) +
         ggtitle(groups[i]) +
         guides(color = guide_legend(title = groups[i])) +
@@ -90,8 +90,6 @@ AllSpatialDimPlot <- function(object,
   }
   return(plots)
 }
-
-features <- c("TPT1", "IGHA1")
 
 AllSpatialFeaturePlot <- function(object,
                                   normalizeMethod = c("SCT", "log"),
@@ -137,6 +135,7 @@ AllSpatialFeaturePlot <- function(object,
       cl <- setNames(object@meta.data[,cl_id], rownames(object@meta.data[cl_id]))
       scale_features <- t(scale_exp[features[i], , drop = F])
       scale_features <- cbind(location, scale_features)
+      scale_features$alpha <- (scale_features[,features[i]] + abs(min(scale_features[,features[i]])))/(abs(min(scale_features[,features[i]])) + max(scale_features[,features[i]]))
       # arrange colors by Palo if not set by user
       pal <- gg_color_hue(length(unique(cl)))
       palopal <- Palo(location, cl, pal)
@@ -149,7 +148,7 @@ AllSpatialFeaturePlot <- function(object,
           stop("Must provide the cluster ids when setting cluster.frame == True!")
         } else {
           # get cluster frame with sf
-          p <- st_as_sf(data.frame(x=location$y, y=desc(location$x), A=1:nrow(location)), coords=1:2)
+          p <- st_as_sf(data.frame(x=location$y, y=dplyr::desc(location$x), A=1:nrow(location)), coords=1:2)
           v <- st_voronoi_point(p)
           hull <- st_convex_hull(st_union(p))
 
@@ -158,12 +157,13 @@ AllSpatialFeaturePlot <- function(object,
           sf_0 <- sf[sf$celltype %in% as.character(cluster.highlight),]
 
           plots[[features[i]]] <- ggplot(scale_features) +
-            geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-            geom_point(aes_string(x = scale_features$y, y = desc(scale_features$x), col = features[i]), size = 1) +
-            scale_color_viridis(option="viridis") +
+            geom_sf(data = st_union(sf_0), color = "black", fill = NA) +
+            geom_point(aes_string(x = scale_features$y, y = dplyr::desc(scale_features$x), col = features[i], fill = features[i], alpha = "alpha"), size = 0.5) +
+            #scale_color_viridis(option="viridis") +
             ggtitle(features[i]) +
-            #scale_color_brewer(palette = "PiYG") +
-            #scale_color_gradient2(low = 'blue', mid = 'white', high = 'red') +
+            #scale_color_gradient2(palette = "PiYG") +
+            scale_color_gradient2(low = 'green', mid = 'white', high = 'red') +
+            scale_alpha(range = c(0.2, 1)) +
             guides(color = guide_legend(title = features[i])) +
             theme_void() +
             theme(legend.position="none",
@@ -171,9 +171,11 @@ AllSpatialFeaturePlot <- function(object,
         }
       } else {
         plots[[features[i]]] <- ggplot(scale_features) +
-          #geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-          geom_point(aes_string(x = scale_features$y, y = desc(scale_features$x), col = features[i]), size = 1) +
-          scale_color_viridis(option="viridis") +
+          #geom_sf(data = st_union(sf_0), color = col[cluster.highlight]) +
+          geom_point(aes_string(x = scale_features$y, y = dplyr::desc(scale_features$x), col = "grey", fill = features[i], alpha = "alpha"), size = 0.5) +
+          #scale_color_viridis(option="viridis") +
+          scale_color_gradient2(low = 'green', mid = 'white', high = 'red') +
+          scale_alpha(range = c(0.2, 1)) +
           ggtitle(features[i]) +
           guides(color = guide_legend(title = features[i])) +
           theme_void() +

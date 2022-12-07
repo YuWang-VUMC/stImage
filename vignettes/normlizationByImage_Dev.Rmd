@@ -165,7 +165,7 @@ extract_geneExp_ByNeighbor = function(geneExp,spotToNeighborList,spotsImageSimil
   
   #geneExpByNeighbor==0, keep geneExp. Otherwise take average of geneExp and geneExpByNeighbor
   geneExpNormlizedByNeighbor=(geneExp*(2-sign(abs(geneExpByNeighbor)))+geneExpByNeighbor)/2
-  
+  geneExpNormlizedByNeighbor[is.na(geneExpNormlizedByNeighbor)] = 0
   return(geneExpNormlizedByNeighbor)
   
 }

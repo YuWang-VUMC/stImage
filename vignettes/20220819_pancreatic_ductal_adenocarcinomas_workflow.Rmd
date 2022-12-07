@@ -192,6 +192,7 @@ p7 + p8
 dataObjSpatialPCA <-
   MultimodalPreProcess(
     dataObj,
+    normalizeMethod = "SCT",
     DimReducMethod = "SpatialPCA",
     genePercentCut = 0.05,
     imagePercentCut = 0.05

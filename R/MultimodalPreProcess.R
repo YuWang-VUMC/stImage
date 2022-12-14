@@ -113,7 +113,7 @@ MultimodalPreProcess <- function(object,
 
   object <- runDimReduc(
     object,
-    DimReducMethod = "PCA",
+    DimReducMethod = DimReducMethod,
     assay = assay,
     percentCut = imagePercentCut,
     pcaDim = pcaDim_i,

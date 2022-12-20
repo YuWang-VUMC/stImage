@@ -19,7 +19,7 @@ extract_features <- function(imgFile,
                              positionTable,
                              patchSize=NULL,
                              scaleFactor=1,
-                             rawImage = FALSE,
+                             saveRawImage = FALSE,
                              savePatchOnImage=NULL) {
   #suppressMessages(require(tensorflow, warn.conflicts = F, quietly = T))
   #suppressMessages(require(keras, warn.conflicts = F, quietly = T))
@@ -67,7 +67,7 @@ extract_features <- function(imgFile,
   if (!is.null(savePatchOnImage)) {
     savePatchOnImageWidth <- dim(img)[1]
     savePatchOnImageHeight <- dim(img)[2]
-    if(!rawImage){
+    if(!saveRawImage){
       saveImageMaxSize <- 2000
       if (any(savePatchOnImageWidth > saveImageMaxSize | savePatchOnImageHeight > saveImageMaxSize)) {
         saveImageSizeFactor <- max(c(savePatchOnImageWidth/saveImageMaxSize,savePatchOnImageHeight/saveImageMaxSize))
@@ -120,7 +120,7 @@ extract_features_Visium <- function(spatialDir, patchSize=NULL, rawImage = FALSE
     imgFile <- paste0(spatialDir,"/tissue_hires_image.png")
     scaleFactor <- fromJSON(scaleFactorFile)$tissue_hires_scalef
   }
-  imageFeatures <- extract_features(imgFile, positionTable, patchSize=patchSize, scaleFactor=scaleFactor, rawImage=rawImage, ...)
+  imageFeatures <- extract_features(imgFile, positionTable, patchSize=patchSize, scaleFactor=scaleFactor,  ...)
 
   return(imageFeatures)
 }

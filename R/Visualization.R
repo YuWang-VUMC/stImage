@@ -25,35 +25,43 @@ AllSpatialDimPlot <- function(object,
                               cluster.frame = TRUE,
                               cluster.highlight = NULL,
                               col = NULL,
+                              groups=NULL,
                               ...) {
 
   location <- GetTissueCoordinates(object)
+  if (identical(colnames(location),c("imagerow","imagecol"))) { #10x Visum, change to Y and X to match codes in other parts
+    colnames(location)=c("x","y")
+  }
 
-  geneClusterName=grep("SCTPCA_cluster",colnames(object@meta.data),value=TRUE)
-  renormgeneClusterName=grep("SCTNormalizedByImagePCA_cluster",colnames(object@meta.data),value=TRUE)
-  geneBayesSpaceClusterName=grep("SCTBayesSpace_Cluster",colnames(object@meta.data),value=TRUE)
-  ImageFeatureBayesSpaceClusterName=grep("ImageFeatureBayesSpace_Cluster",colnames(object@meta.data),value=TRUE)
-  BayesSpacewnnClusterName=grep("BayesSpace_DistIntegrated_Cluster",colnames(object@meta.data),value=TRUE)
-  geneSpectrumClusterName=grep("SCTPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
-  ImageFeatureSpectrumClusterName=grep("ImageFeaturePCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
-  RGBSpectrumClusterName=grep("RGBPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
-  SpectrumClusterName=grep("Spectrum_Cluster",colnames(object@meta.data),value=TRUE)
-  geneSPCASpectrumClusterName=grep("SCTSpatialPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
-  ImageFeatureSPCASpectrumClusterName=grep("ImageFeatureSpatialPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
-  geneSPCAClusterName=grep("SCTSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
-  imageClusterName=grep("ImageFeaturePCA_cluster",colnames(object@meta.data),value=TRUE)
-  imageFeatureSPCAClusterName=grep("ImageFeatureSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
-  RGBClusterName=grep("RGBPCA_cluster",colnames(object@meta.data),value=TRUE)
-  wnnClusterName=grep("wnn_cluster",colnames(object@meta.data),value=TRUE)
-  mciaClusterName=grep("mcia_snn_cluster",colnames(object@meta.data),value=TRUE)
-  intnmfClusterName=grep("intnmf_snn_cluster",colnames(object@meta.data),value=TRUE)
-  ticaClusterName=grep("tica_snn_cluster",colnames(object@meta.data),value=TRUE)
+  if (is.null(groups)) { #groups to plot NOT defined. Plot all groups in data
+    geneClusterName=grep("SCTPCA_cluster",colnames(object@meta.data),value=TRUE)
+    renormgeneClusterName=grep("SCTNormalizedByImagePCA_cluster",colnames(object@meta.data),value=TRUE)
+    geneBayesSpaceClusterName=grep("SCTBayesSpace_Cluster",colnames(object@meta.data),value=TRUE)
+    ImageFeatureBayesSpaceClusterName=grep("ImageFeatureBayesSpace_Cluster",colnames(object@meta.data),value=TRUE)
+    BayesSpacewnnClusterName=grep("BayesSpace_DistIntegrated_Cluster",colnames(object@meta.data),value=TRUE)
+    geneSpectrumClusterName=grep("SCTPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    ImageFeatureSpectrumClusterName=grep("ImageFeaturePCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    RGBSpectrumClusterName=grep("RGBPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    SpectrumClusterName=grep("Spectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    geneSPCASpectrumClusterName=grep("SCTSpatialPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    ImageFeatureSPCASpectrumClusterName=grep("ImageFeatureSpatialPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    geneSPCAClusterName=grep("SCTSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
+    imageClusterName=grep("ImageFeaturePCA_cluster",colnames(object@meta.data),value=TRUE)
+    imageFeatureSPCAClusterName=grep("ImageFeatureSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
+    RGBClusterName=grep("RGBPCA_cluster",colnames(object@meta.data),value=TRUE)
+    wnnClusterName=grep("wnn_cluster",colnames(object@meta.data),value=TRUE)
+    mciaClusterName=grep("mcia_snn_cluster",colnames(object@meta.data),value=TRUE)
+    intnmfClusterName=grep("intnmf_snn_cluster",colnames(object@meta.data),value=TRUE)
+    ticaClusterName=grep("tica_snn_cluster",colnames(object@meta.data),value=TRUE)
 
-  groups <- c(geneClusterName, renormgeneClusterName, geneBayesSpaceClusterName, ImageFeatureBayesSpaceClusterName, BayesSpacewnnClusterName,
-              geneSpectrumClusterName, ImageFeatureSpectrumClusterName, RGBSpectrumClusterName, SpectrumClusterName, geneSPCASpectrumClusterName,
-              ImageFeatureSPCASpectrumClusterName, geneSPCAClusterName, imageClusterName, imageFeatureSPCAClusterName, RGBClusterName,
-              wnnClusterName, mciaClusterName, intnmfClusterName, ticaClusterName)
-  groups <- groups[!is.na(groups)]
+    groups <- c(geneClusterName, renormgeneClusterName, geneBayesSpaceClusterName, ImageFeatureBayesSpaceClusterName, BayesSpacewnnClusterName,
+                geneSpectrumClusterName, ImageFeatureSpectrumClusterName, RGBSpectrumClusterName, SpectrumClusterName, geneSPCASpectrumClusterName,
+                ImageFeatureSPCASpectrumClusterName, geneSPCAClusterName, imageClusterName, imageFeatureSPCAClusterName, RGBClusterName,
+                wnnClusterName, mciaClusterName, intnmfClusterName, ticaClusterName)
+    groups <- groups[!is.na(groups)]
+  } else { #groups to plot defined.
+    groups=intersect(groups,colnames(object@meta.data))
+  }
 
   plots <- list()
   for (i in 1:length(groups)) {

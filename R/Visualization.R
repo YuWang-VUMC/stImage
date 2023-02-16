@@ -25,34 +25,60 @@ AllSpatialDimPlot <- function(object,
                               cluster.frame = TRUE,
                               cluster.highlight = NULL,
                               col = NULL,
+                              groups=NULL,
                               ...) {
 
   location <- GetTissueCoordinates(object)
+  if (identical(colnames(location),c("imagerow","imagecol"))) { #10x Visum, change to Y and X to match codes in other parts
+    colnames(location)=c("x","y")
+  }
 
-  geneClusterName=grep("SCTPCA_cluster",colnames(object@meta.data),value=TRUE)
-  renormgeneClusterName=grep("SCTNormalizedByImagePCA_cluster",colnames(object@meta.data),value=TRUE)
-  geneSPCAClusterName=grep("SCTSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
-  imageClusterName=grep("ImageFeaturePCA_cluster",colnames(object@meta.data),value=TRUE)
-  RGBClusterName=grep("RGBPCA_cluster",colnames(object@meta.data),value=TRUE)
-  wnnClusterName=grep("wnn_cluster",colnames(object@meta.data),value=TRUE)
-  mciaClusterName=grep("mcia_snn_cluster",colnames(object@meta.data),value=TRUE)
-  intnmfClusterName=grep("intnmf_snn_cluster",colnames(object@meta.data),value=TRUE)
-  ticaClusterName=grep("tica_snn_cluster",colnames(object@meta.data),value=TRUE)
+  if (is.null(groups)) { #groups to plot NOT defined. Plot all groups in data
+    geneClusterName=grep("SCTPCA_cluster",colnames(object@meta.data),value=TRUE)
+    renormgeneClusterName=grep("SCTNormalizedByImagePCA_cluster",colnames(object@meta.data),value=TRUE)
+    geneBayesSpaceClusterName=grep("SCTBayesSpace_Cluster",colnames(object@meta.data),value=TRUE)
+    ImageFeatureBayesSpaceClusterName=grep("ImageFeatureBayesSpace_Cluster",colnames(object@meta.data),value=TRUE)
+    BayesSpacewnnClusterName=grep("BayesSpace_DistIntegrated_Cluster",colnames(object@meta.data),value=TRUE)
+    geneSpectrumClusterName=grep("SCTPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    ImageFeatureSpectrumClusterName=grep("ImageFeaturePCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    RGBSpectrumClusterName=grep("RGBPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    SpectrumClusterName=grep("Spectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    geneSPCASpectrumClusterName=grep("SCTSpatialPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    ImageFeatureSPCASpectrumClusterName=grep("ImageFeatureSpatialPCASpectrum_Cluster",colnames(object@meta.data),value=TRUE)
+    geneSPCAClusterName=grep("SCTSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
+    imageClusterName=grep("ImageFeaturePCA_cluster",colnames(object@meta.data),value=TRUE)
+    imageFeatureSPCAClusterName=grep("ImageFeatureSpatialPCA_cluster",colnames(object@meta.data),value=TRUE)
+    RGBClusterName=grep("RGBPCA_cluster",colnames(object@meta.data),value=TRUE)
+    wnnClusterName=grep("wnn_cluster",colnames(object@meta.data),value=TRUE)
+    mciaClusterName=grep("mcia_snn_cluster",colnames(object@meta.data),value=TRUE)
+    intnmfClusterName=grep("intnmf_snn_cluster",colnames(object@meta.data),value=TRUE)
+    ticaClusterName=grep("tica_snn_cluster",colnames(object@meta.data),value=TRUE)
 
-  groups <- c(geneClusterName, renormgeneClusterName, geneSPCAClusterName, imageClusterName, RGBClusterName, wnnClusterName, mciaClusterName, intnmfClusterName, ticaClusterName)
-  groups <- groups[!is.na(groups)]
+    groups <- c(geneClusterName, renormgeneClusterName, geneBayesSpaceClusterName, ImageFeatureBayesSpaceClusterName, BayesSpacewnnClusterName,
+                geneSpectrumClusterName, ImageFeatureSpectrumClusterName, RGBSpectrumClusterName, SpectrumClusterName, geneSPCASpectrumClusterName,
+                ImageFeatureSPCASpectrumClusterName, geneSPCAClusterName, imageClusterName, imageFeatureSPCAClusterName, RGBClusterName,
+                wnnClusterName, mciaClusterName, intnmfClusterName, ticaClusterName)
+    groups <- groups[!is.na(groups)]
+  } else { #groups to plot defined.
+    groups=intersect(groups,colnames(object@meta.data))
+  }
 
   plots <- list()
   for (i in 1:length(groups)) {
+
     cl <- setNames(object@meta.data[,groups[i]], rownames(object@meta.data[groups[i]]))
     location$cluster <- as.factor(cl)
     # arrange colors by Palo if not set by user
-    pal <- gg_color_hue(length(unique(cl)))
-    palopal <- Palo(location, cl, pal)
-    if(is.null(col)){
-      col <- palopal
-    }
 
+    #pal <- gg_color_hue(length(unique(cl)))
+    #palopal <- Palo(location, cl, pal, init_iter = 100,
+    #                refine_iter = 200,
+    #                early_stop = 50)
+#
+    #if(is.null(col)){
+    #  col <- palopal
+    #}
+#
     if(cluster.frame){
       if(is.null(cluster.highlight)) {
         stop("Must provide the cluster ids when setting cluster.frame == True!")
@@ -68,7 +94,7 @@ AllSpatialDimPlot <- function(object,
 
         plots[[groups[i]]] <- ggplot(data = location) +
           geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-          geom_point(aes_string(x = location$y, y = dplyr::desc(location$x), col = location$cluster), size = 1) +
+          geom_point(aes_string(x = location$y, y = dplyr::desc(location$x), col = location$cluster), size = 0.5) +
           scale_color_manual(values = col) +
           ggtitle(groups[i]) +
           guides(color = guide_legend(title = groups[i])) +
@@ -79,7 +105,7 @@ AllSpatialDimPlot <- function(object,
     } else {
       plots[[groups[i]]] <- ggplot(data = location) +
         #geom_sf(data = st_union(sf_0), color = col[as.character(cluster.highlight)]) +
-        geom_point(aes_string(x = location$y, y = dplyr::desc(location$x), col = location$cluster), size = 1) +
+        geom_point(aes_string(x = location$y, y = dplyr::desc(location$x), col = location$cluster), size = 0.5) +
         scale_color_manual(values = col) +
         ggtitle(groups[i]) +
         guides(color = guide_legend(title = groups[i])) +
@@ -157,7 +183,7 @@ AllSpatialFeaturePlot <- function(object,
           sf_0 <- sf[sf$celltype %in% as.character(cluster.highlight),]
 
           plots[[features[i]]] <- ggplot(scale_features) +
-            geom_sf(data = st_union(sf_0), color = "black", fill = NA) +
+            geom_sf(data = st_union(sf_0), color = "black", size = 0.5, fill = NA) +
             geom_point(aes_string(x = scale_features$y, y = dplyr::desc(scale_features$x), col = features[i], fill = features[i], alpha = "alpha"), size = 0.5) +
             #scale_color_viridis(option="viridis") +
             ggtitle(features[i]) +
@@ -172,7 +198,7 @@ AllSpatialFeaturePlot <- function(object,
       } else {
         plots[[features[i]]] <- ggplot(scale_features) +
           #geom_sf(data = st_union(sf_0), color = col[cluster.highlight]) +
-          geom_point(aes_string(x = scale_features$y, y = dplyr::desc(scale_features$x), col = "grey", fill = features[i], alpha = "alpha"), size = 0.5) +
+          geom_point(aes_string(x = scale_features$y, y = dplyr::desc(scale_features$x), col = features[i], fill = features[i], alpha = "alpha"), size = 0.5) +
           #scale_color_viridis(option="viridis") +
           scale_color_gradient2(low = 'green', mid = 'white', high = 'red') +
           scale_alpha(range = c(0.2, 1)) +

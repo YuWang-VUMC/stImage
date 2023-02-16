@@ -21,6 +21,8 @@ MultimodalPreProcess <- function(object,
                                  pcaDim_i = 30,
                                  pcaDim_c = 6,
                                  DimReducMethod = c("PCA", "SpatialPCA"),
+                                 prefiltergenePercentCut=0.05,
+                                 prefilterimagePercentCut=0.05,
                                  genePercentCut=0.05,
                                  customGenes=NULL,
                                  imagePercentCut=0.05,
@@ -36,7 +38,7 @@ MultimodalPreProcess <- function(object,
   message("## Data filtering at raw level")
   ### gene level
   assay="Spatial"
-  percentCut=genePercentCut
+  percentCut=prefiltergenePercentCut
 
   minValue=min(object[[assay]]@counts)
   if (minValue!=0) {
@@ -53,7 +55,7 @@ MultimodalPreProcess <- function(object,
 
   ###ImageFeature
   assay="ImageFeature"
-  percentCut=imagePercentCut
+  percentCut=prefilterimagePercentCut
 
   minValue=min(object[[assay]]@counts)
   if (minValue!=0) {

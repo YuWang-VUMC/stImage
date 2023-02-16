@@ -9,7 +9,7 @@ doBayesSpace=function(dataObj,platform=c("ST","Visium"),
                       graphNameDist=paste0(name,c("_Dist")),
                       graphNameChain=paste0(name,c("_ChainMatrix")),
                       nn.name=paste0(name,c("_Neighbor")),
-                      clusterColumnName=paste0(name,"_Cluster",nCluster),
+                      clusterColumnName=paste0(name),
                       reduction=NULL,
                       nCluster=4) {
 

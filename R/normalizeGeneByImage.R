@@ -85,7 +85,7 @@ NormalizeGeneByImage <- function(dataObj,
                                  spotsCoordinate = NULL,
                                  platform = ifelse("platform" %in% names(dataObj@misc),
                                                    dataObj@misc$platform,
-                                                   "Visum"),
+                                                   "Visium"),
                                  geneExp = NULL,
                                  normalizePC = FALSE,
                                  assay = "SCT",
@@ -97,15 +97,11 @@ NormalizeGeneByImage <- function(dataObj,
 
   weights=match.arg(weights)
 
-  coordinateNeighborN = 6
-  if (platform=="ST") {
-    coordinateNeighborN = 4
-  }
   #Location distance of spots
   message("find coordinate neighbor...")
   if (is.null(spotsCoordinate)) {
     spotsCoordinate <- dataObj@images[[1]]@coordinates
-    if (("imagecol" %in% colnames(spotsCoordinate)) & "imagerow" %in% colnames(spotsCoordinate) ) { #10X Visum data
+    if (("imagecol" %in% colnames(spotsCoordinate)) & "imagerow" %in% colnames(spotsCoordinate) ) { #10X Visium data
       #this is too large and slow, still use row and col
       #spotsCoordinate <- spotsCoordinate[,c("imagerow","imagecol")]
       spotsCoordinate <- spotsCoordinate[,c("row","col")]
@@ -113,9 +109,16 @@ NormalizeGeneByImage <- function(dataObj,
     } else if (("row" %in% colnames(spotsCoordinate)) & "col" %in% colnames(spotsCoordinate) ) { #ST
       spotsCoordinate <- spotsCoordinate[,c("row","col")]
       platform="ST"
+    } else if (("x" %in% colnames(spotsCoordinate)) & "y" %in% colnames(spotsCoordinate)) { #don't know platform
+      spotsCoordinate <- spotsCoordinate[,c("y","x")]
     } else {
-      stop("Can't find imagerow/imagecol or row/col in spotsCoordinate")
+      stop("Can't find imagerow/imagecol or row/col or x/y in spotsCoordinate")
     }
+  }
+
+  coordinateNeighborN = 6
+  if (platform=="ST") {
+    coordinateNeighborN = 4
   }
   spotToNeighborList <- FindCoordinateNeighbor(spotsCoordinate, n = coordinateNeighborN)
 
@@ -144,6 +147,10 @@ NormalizeGeneByImage <- function(dataObj,
 
     if (weights=="weights_matrix_all") { #consider gene level correlation in weight, see stLearn code
       message("Similarity by gene PCs ...")
+      if (is.null(geneDimReducName)) {
+        geneDimReducName="SCTPCA"
+        warning(paste0("selected weights_matrix_all but geneDimReducName not defined. Use SCTPCA as geneDimReducName"))
+      }
       genePCs <- t(dataObj[[geneDimReducName]]@cell.embeddings[ ,1:pcaDim_g])
       spotsGeneSimilarity <- Rfast2::dcora(genePCs)
     } else {
@@ -156,6 +163,10 @@ NormalizeGeneByImage <- function(dataObj,
   message("Normalization...")
   if (is.null(geneExp)) { #use geneExp from object
     if (normalizePC) { #Normalization PCA
+      if (is.null(geneDimReducName)) {
+        geneDimReducName="SCTPCA"
+        warning(paste0("selected normalizePC but geneDimReducName not defined. Use SCTPCA as geneDimReducName"))
+      }
       geneExp <- t(dataObj[[geneDimReducName]]@cell.embeddings)
     } else { #Normalization gene
       dataSlot <- match.arg(dataSlot)

@@ -8,24 +8,24 @@ DoBayesSpaceIntegration = function(dataObj,
     dataObj,
     assay = assay[1],
     nCluster = BayesSpaceClusterNum,
-    name=paste0(assay[1],"BayesSpace")
+    name=paste0(assay[1],"BayesSpace_Cluster",clusterNum)
   )
   #reduction="SCTPCA")  #Not good using these PCs. Need use BayesSpace PCs and variable genes
   dataObj = doBayesSpace(
     dataObj,
     assay = assay[2],
     nCluster = BayesSpaceClusterNum,
-    name=paste0(assay[2],"BayesSpace")
+    name=paste0(assay[2],"BayesSpace_Cluster",clusterNum)
   )
   #reduction="ImageFeaturePCA")
   dataObj = IntegrationByDistance(
     dataObj,
     distMatrix =
-      paste0(assay,"BayesSpace_Dist"),
+      paste0(assay,"BayesSpace_Cluster",clusterNum,"_Dist"),
       # c("SCTBayesSpace_Dist",
       #   "ImageFeatureBayesSpace_Dist"),
     snnMatrix =
-      paste0(assay,"BayesSpace_snn"),
+      paste0(assay,"BayesSpace_Cluster",clusterNum,"_snn"),
       # c("SCTBayesSpace_snn",
       #   "ImageFeatureBayesSpace_snn"),
     name = c(

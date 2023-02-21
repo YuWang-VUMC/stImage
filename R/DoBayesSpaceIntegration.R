@@ -40,7 +40,7 @@ DoBayesSpaceIntegration = function(dataObj,
       graph.name = "BayesSpace_DistIntegrated_snn",
       nn.name = "BayesSpace_DistIntegrated_Neighbor",
       clusterColumnName = paste0("BayesSpace_DistIntegrated_Cluster",clusterNum),
-      resolutionMin = 0.01,
+      resolutionMin = 0.001,
       resolutionMax = 4,
       RunUMAP = FALSE
     )

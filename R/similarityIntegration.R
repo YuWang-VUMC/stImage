@@ -137,7 +137,8 @@ IntegrationByDistance=function(dataObj=NULL,
     dataObj@graphs[[integrated.weight.name]]=distMatrixWeighted_Weight
     dataObj=FindNeighborsByDistance(dataObj,distMatrixWeighted,
                             graphs.name=graphs.name,
-                            nn.name=nn.name)
+                            nn.name=nn.name,
+                            k.param=k.param)
 
     return(dataObj)
   }
@@ -149,14 +150,17 @@ FindNeighborsByDistance=function(dataObj=NULL,distMatrix,prune.SNN=1/15,
                                  graphs.name=c("nn","snn"),
                                  nn.name="neighbor",
                                  reduction.name = paste0(nn.name,'UMAP'),
-                                 reduction.key = paste0(nn.name,'UMAP_')) {
+                                 reduction.key = paste0(nn.name,'UMAP_'),
+                                 k.param=20) {
   if (!is.null(dataObj) & is.character(distMatrix)) { #defined dataObj, extract distMatrix from graphs
     distMatrix=as.matrix(dataObj@graphs[[distMatrix]])
   }
   #browser()
   distMatrixNeighborsList=FindNeighbors(distMatrix,
-                                              prune.SNN =prune.SNN,
-                                              force.recalc=TRUE)
+                                        distance.matrix=TRUE,
+                                        prune.SNN =prune.SNN,
+                                        force.recalc=TRUE,
+                                        k.param=k.param)
   #row.names(bayesSpaceResultNeighborsList[[1]])
   #browser()
   if (!is.null(assay)) {
@@ -171,7 +175,7 @@ FindNeighborsByDistance=function(dataObj=NULL,distMatrix,prune.SNN=1/15,
     dataObj[[graphs.name[2]]]=distMatrixNeighborsList[["snn"]]
 
     #get NeighborObj for umap
-    objNeighbor=distToNeighborObj(distMatrix,k.param=20)
+    objNeighbor=distToNeighborObj(distMatrix,k.param=k.param)
     dataObj@neighbors[[nn.name]]=objNeighbor
     dataObj <- RunUMAP(dataObj,
                        nn.name = nn.name,

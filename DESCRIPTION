@@ -15,18 +15,48 @@ Depends:
     R (>= 4.0.0),
     methods
 Imports:
+    Seurat,
     jsonlite,
     png,
     tensorflow,
     keras,
     plotrix,
     SpatialPCA,
+    SPARK,
+    Spectrum,
     IntNMF,
     omicade4,
     tensorBSS,
     ssanv,
-    lsa
+    BayesSpace,
+    SingleCellExperiment,
+    lsa,
+    Rfast2,
+    rhdf5,
+    sp,
+    sf
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.2
+Collate: 
+    'similarityIntegration.R'
+    'findSNNClusters.R'
+    'doBayesSpace.R'
+    'DoBayesSpaceIntegration.R'
+    'DoTICA.R'
+    'ExtractImageFeature.R'
+    'FindNClusters.R'
+    'LoadImageFeature.R'
+    'MultimodalIntegrationVisium.R'
+    'SpatialPCAWorkflow.R'
+    'runDimReduc.R'
+    'MultimodalPreProcess.R'
+    'ReProcessAfterRenormByImage.R'
+    'ReProcessWithNormByImage.R'
+    'Visualization.R'
+    'Visualization2.R'
+    'doSPARK.R'
+    'doSpectrum.R'
+    'dostLearn.R'
+    'getMIA.R'

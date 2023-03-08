@@ -15,17 +15,76 @@ MultiModalIntegrationVisium(
   clusterColumnName = if (!is.null(nCluster)) paste0("wnn_cluster", nCluster) else NULL,
   cia.nf = 20,
   IntNMF.nf = 20,
-  MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA"),
+  genePercentCut = 0.05,
+  imagePercentCut = 0.05,
+  MultimodalMethod = c("WNN", "MCIA", "IntNMF", "tICA", "Spectrum"),
   WnnImageWeightFactor = 1,
+  k.nn = 20,
+  knn.range = 200,
   ...
 )
 }
 \arguments{
-\item{normalizeMethod}{}
-}
-\value{
+\item{object}{A \code{Seurat} object.}
 
+\item{normalizeMethod}{the normalization method for gene expression matrix.
+\code{log} for \code{LogNormalize}, \code{SCT} for \code{SCTransform}.}
+
+\item{reduction.list}{list of dimension reduction matrices for integration}
+
+\item{pcaDim_s}{number of PCs when running dimension reduction on gene
+expression (spatial) matrix, 30 as default}
+
+\item{pcaDim_i}{number of PCs when running dimension reduction on image
+feature matrix, 30 as default}
+
+\item{resolution}{resolution of SNN clustering}
+
+\item{nCluster}{number of clusters}
+
+\item{clusterColumnName}{column name in meta data to store the clustering
+results}
+
+\item{cia.nf}{An integer indicating the number of kept axes in \code{mcia}
+function}
+
+\item{IntNMF.nf}{Number of clusters in \code{nmf.mnnals} function}
+
+\item{genePercentCut}{cutoff value of percentage of spots of their
+values larger than minimum value for filtering genes after normalization.}
+
+\item{imagePercentCut}{cutoff value of percentage of spots of their
+values larger than minimum value for prefiltering image features after
+normalization.}
+
+\item{MultimodalMethod}{integration methods used for integrating
+multi-modalites, can be multiple. Note: if include \code{IntNMF}, this step
+take extremely long time.}
+
+\item{WnnImageWeightFactor}{numeric value of setting weight of image feature
+when do WNN integration. 1 as default}
+
+\item{k.nn}{the number of multimodal neighbors to compute. 20 by default}
+
+\item{knn.range}{The number of approximate neighbors to compute}
+
+\item{...}{Arguments passed to \code{\link{findSNNClusters}}}
 }
 \description{
 integrating and processing for Visium dataset
+}
+\examples{
+\dontrun{
+object <-
+  MultiModalIntegrationVisium(
+    object,
+    MultimodalMethod = "WNN",
+    pcaDim_s = 20,
+    pcaDim_i = 20,
+    reduction.list = list("SCTPCA", "ImageFeaturePCA"),
+    nCluster = clusterNum,
+    resolutionMax = 3
+    )
+}
+
 }

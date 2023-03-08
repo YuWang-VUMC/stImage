@@ -2,7 +2,7 @@
 % Please edit documentation in R/MultimodalPreProcess.R
 \name{MultimodalPreProcess}
 \alias{MultimodalPreProcess}
-\title{Title}
+\title{MultimodalPreProcess}
 \usage{
 MultimodalPreProcess(
   object,
@@ -11,17 +11,72 @@ MultimodalPreProcess(
   pcaDim_i = 30,
   pcaDim_c = 6,
   DimReducMethod = c("PCA", "SpatialPCA"),
+  prefiltergenePercentCut = 0.05,
+  prefilterimagePercentCut = 0.05,
   genePercentCut = 0.05,
   imagePercentCut = 0.05,
+  customGenes = NULL,
   ...
 )
 }
 \arguments{
-\item{...}{}
+\item{object}{A \code{Seurat} object prepared by \code{LoadImageFeature} or
+\code{LoadImageFeatureVisium}}
+
+\item{normalizeMethod}{the normalization method for gene expression matrix.
+\code{log} for \code{LogNormalize}, \code{SCT} for \code{SCTransform}.}
+
+\item{pcaDim_s}{number of PCs when running dimension reduction on gene
+expression (spatial) matrix, 30 as default}
+
+\item{pcaDim_i}{number of PCs when running dimension reduction on image
+feature matrix, 30 as default}
+
+\item{pcaDim_c}{number of PCs when running dimension reduction on RGB
+quantile matrix, 6 as default}
+
+\item{DimReducMethod}{dimension reduction method. Can be either \code{PCA}
+or \code{SpatialPCA}}
+
+\item{prefiltergenePercentCut}{cutoff value of percentage of spots of their
+values larger than minimum value for prefiltering genes.}
+
+\item{prefilterimagePercentCut}{cutoff value of percentage of spots of their
+values larger than minimum value for prefiltering image features.}
+
+\item{genePercentCut}{cutoff value of percentage of spots of their
+values larger than minimum value for filtering genes after normalization.}
+
+\item{imagePercentCut}{cutoff value of percentage of spots of their
+values larger than minimum value for prefiltering image features after
+normalization.}
+
+\item{customGenes}{custom gene list provide by user. If is not \code{NULL},
+this list will be used instead of the most variable genes.}
+
+\item{...}{Arguments passed to \code{\link{runDimReduc}}}
 }
 \value{
-
+A \code{Seurat} object
 }
 \description{
-Title
+MultimodalPreProcess
+}
+\examples{
+\dontrun{
+object <-
+  MultimodalPreProcess(
+    object,
+    pcaDim_s = 20,
+    pcaDim_i = 20,
+    pcaDim_c = 6,
+    normalizeMethod = "SCT",
+    DimReducMethod = "PCA",
+    prefiltergenePercentCut=0,
+    prefilterimagePercentCut=0,
+    genePercentCut = 0.25,
+    imagePercentCut = 0.2
+ )
+}
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/findSNNClusters.R
 \name{findSNNClusters}
 \alias{findSNNClusters}
-\title{Title}
+\title{findSNNClusters}
 \usage{
 findSNNClusters(
   object,
@@ -13,19 +13,57 @@ findSNNClusters(
   resolution = 0.8,
   assay = DefaultAssay(object),
   nCluster = NULL,
+  k.param = 20,
   clusterColumnName = if (!is.null(nCluster)) paste0(reduction, "_cluster", nCluster)
     else NULL,
-  reduction.name = paste0(reduction, "UMAP"),
-  reduction.key = paste0(reduction, "UMAP_"),
+  reduction.name = ifelse(!is.null(reduction), paste0(reduction, "UMAP"), paste0(nn.name,
+    "UMAP")),
+  reduction.key = ifelse(!is.null(reduction), paste0(reduction, "UMAP_"), paste0(nn.name,
+    "UMAP_")),
+  RunUMAP = TRUE,
   ...
 )
 }
 \arguments{
-\item{...}{}
-}
-\value{
+\item{object}{A \code{Seurat} object.}
 
+\item{reduction}{dimension reduction method}
+
+\item{graph.name}{naming parameter for stored (S)NN graph}
+
+\item{nn.name}{Name of knn output on which to run UMAP}
+
+\item{dims}{which dimensions to use as input features}
+
+\item{resolution}{value of the resolution parameter, use a value above
+(below) 1.0 if you want to obtain a larger (smaller) number of communities.}
+
+\item{assay}{Assay to use in construction of (S)NN; used only when dims is
+NULL}
+
+\item{nCluster}{number of clusters}
+
+\item{clusterColumnName}{column name in meta data to store the clustering
+results}
+
+\item{reduction.name}{name of projected UMAP to store in the query}
+
+\item{reduction.key}{value for the projected UMAP key}
+
+\item{...}{Arguments passed to \code{\link{FindNClusters}}}
 }
 \description{
-Title
+findSNNClusters
+}
+\examples{
+\dontrun{
+object <- findSNNClusters(
+  object,
+  dims = 1:20,
+  reduction = "SCTPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+  )
+}
+
 }

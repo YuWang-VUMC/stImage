@@ -2,16 +2,19 @@
 % Please edit documentation in R/FindNClusters.R
 \name{FindClustersForUniroot}
 \alias{FindClustersForUniroot}
-\title{Title}
+\title{FindClustersForUniroot}
 \usage{
-FindClustersForUniroot(x, object, nCluster = 6, ...)
+FindClustersForUniroot(x, object, nCluster = 6, graph.name = NULL, ...)
 }
 \arguments{
-\item{...}{}
-}
-\value{
+\item{x}{numeric value for resolution setting}
 
+\item{object}{A \code{Seurat} object.}
+
+\item{nCluster}{number of clusters}
+
+\item{...}{Arguments passed to \code{\link{FindClusters}}}
 }
 \description{
-Title
+FindClustersForUniroot
 }

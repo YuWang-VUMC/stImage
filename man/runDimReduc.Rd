@@ -2,7 +2,7 @@
 % Please edit documentation in R/runDimReduc.R
 \name{runDimReduc}
 \alias{runDimReduc}
-\title{Title}
+\title{runDimReduc}
 \usage{
 runDimReduc(
   object,
@@ -10,15 +10,26 @@ runDimReduc(
   assay = "SCT",
   percentCut = 0.05,
   pcaDim = 30,
+  customGenes = NULL,
   ...
 )
 }
 \arguments{
+\item{object}{A \code{Seurat} object}
+
+\item{DimReducMethod}{dimension reduction method. Can be either \code{PCA}
+or \code{SpatialPCA}}
+
+\item{assay}{assay used for dimension reduction analysis. i.e., \code{SCT}
+for gene matrix when preprocessed by \code{SCTransform}}
+
+\item{percentCut}{cutoff value of percentage of spots of their
+values larger than minimum value}
+
+\item{pcaDim}{number of PCs when running dimension reduction}
+
 \item{...}{}
 }
-\value{
-
-}
 \description{
-Title
+runDimReduc
 }

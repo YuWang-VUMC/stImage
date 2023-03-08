@@ -7,10 +7,22 @@
 DoTICA(data, dim, method = c("FOBI", "JADE"))
 }
 \arguments{
-\item{method}{}
-}
-\value{
+\item{data}{this is the data object, which contains the multi-way data in
+two different formats. The "A" entry of data (data$A) gives the array or
+data-tensor format, whereas the "L" entry of data (data$L) gives the data in
+list format. In the former case, and in our specific applications, the first
+mode defines the tissue, cell or data-type, the second mode defines the
+samples and the third mode the features (e.g. CpGs or genes). In the latter
+case, each list entry corresponds to the cell/tissue or data-type and
+consists of the data-matrix which rows representing features and columns
+representing samples.}
 
+\item{dim}{this is a vector which contains the number of significant
+components of each data matrix to search for, and is typically obtained by
+applying RMT to each separate data/tissue-type matrix (i.e. to the
+individual entries of data$L above).}
+
+\item{method}{either \code{FOBI} or \code{JADE}}
 }
 \description{
 tICA

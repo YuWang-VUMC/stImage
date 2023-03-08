@@ -1,9 +1,9 @@
-#' Title
-#'
-#' @param x
-#' @param object
-#' @param nCluster
-#' @param ...
+#' FindClustersForUniroot
+#' @inheritParams Seurat
+#' @param x numeric value for resolution setting
+#' @param object A \code{Seurat} object.
+#' @param nCluster number of clusters
+#' @param ... Arguments passed to \code{\link{FindClusters}}
 #'
 #' @return
 #' @export
@@ -15,26 +15,28 @@ FindClustersForUniroot <- function(x,
                                    graph.name=NULL,
                                    ...) {
   print(x)
-  #browser()
-  object <- FindClusters(object, resolution=x/100, graph.name=graph.name, ...)
+  object <- FindClusters(object,
+                         resolution = x/100,
+                         graph.name = graph.name, ...)
   currentN <- length(unique(object$seurat_clusters))
   return(currentN - nCluster)
 }
 
-#' Title
-#'
-#' @param object
-#' @param nCluster
-#' @param resolution
-#' @param resolutionMin
-#' @param resolutionMax
-#' @param verbose
+#' FindNClusters
+#' @inheritParams Seurat
+#' @param object A \code{Seurat} object.
+#' @param nCluster number of clusters
+#' @param resolution numeric value for resolution setting
+#' @param resolutionMin numeric value for minimum resolution setting
+#' @param resolutionMax numeric value for maximum resolution setting
+#' @param verbose logical value for verbose message. FALSE as default
 #' @param ...
-#'
+#' @importFrom ssanv uniroot.integer
 #' @return
 #' @export
 #'
 #' @examples
+#'
 FindNClusters <- function(object,
                           nCluster = 6,
                           graph.name = NULL,
@@ -43,42 +45,52 @@ FindNClusters <- function(object,
                           resolutionMax = min(resolution + 1, 3),
                           verbose = FALSE,
                           ...) {
-  #browser()
   resolutionRange <- c(resolutionMin, resolutionMax)
 
   #check max or min nCluster in resolution range
-  resultMin <- FindClustersForUniroot(object = object, nCluster = nCluster,
-                                      x = resolutionMin*100,graph.name=graph.name, ...)
-  resultMax <- FindClustersForUniroot(object = object, nCluster = nCluster,
-                                      x = resolutionMax*100,graph.name=graph.name, ...)
-  #browser()
+  resultMin <-
+    FindClustersForUniroot(object = object,
+                           nCluster = nCluster,
+                           x = resolutionMin*100,
+                           graph.name=graph.name, ...)
+  resultMax <-
+    FindClustersForUniroot(object = object,
+                           nCluster = nCluster,
+                           x = resolutionMax*100,
+                           graph.name=graph.name, ...)
 
   if (resultMin >= 0) { #smallest N equal or still larger than nCluster
-    object <- FindClusters(object, resolution = resolutionMin,graph.name=graph.name,...)
+    object <- FindClusters(object,
+                           resolution = resolutionMin,
+                           graph.name=graph.name, ...)
     if (resultMin > 0) {
-      warning(paste0("Get nCluster=", resultMin + nCluster, " with smallest resolution=", resolutionMin, ". Can't get nCluster=", nCluster))
+      warning(paste0("Get nCluster=", resultMin + nCluster,
+                     " with smallest resolution=", resolutionMin,
+                     ". Can't get nCluster=", nCluster))
     }
     return(object)
   } else if (resultMax <= 0) { #largest N still less than nCluster
-    object <- FindClusters(object, resolution = resolutionMax,graph.name=graph.name, ...)
+    object <- FindClusters(object,
+                           resolution = resolutionMax,
+                           graph.name=graph.name, ...)
     if (resultMax < 0) {
-      warning(paste0("Get nCluster=", resultMax+nCluster, " with largest resolution=", resolutionMax, ". Can't get nCluster=", nCluster))
+      warning(paste0("Get nCluster=", resultMax+nCluster,
+                     " with largest resolution=", resolutionMax,
+                     ". Can't get nCluster=", nCluster))
     }
     return(object)
   }
-  result=ssanv::uniroot.integer(f=FindClustersForUniroot,interval=resolutionRange*100,
-                                step.power=5,
-                                object=object,nCluster=nCluster,
-                                graph.name=graph.name,
-                                ...)
-  selectedResolution=result$root/100
-  #browser()
-  object <- FindClusters(object, resolution = selectedResolution, graph.name=graph.name, ...)
+  result <- ssanv::uniroot.integer(
+    f = FindClustersForUniroot,
+    interval = resolutionRange*100,
+    step.power = 5,
+    object=object,nCluster = nCluster,
+    graph.name = graph.name,
+    ...)
+  selectedResolution <- result$root/100
+  object <- FindClusters(object,
+                         resolution = selectedResolution,
+                         graph.name=graph.name, ...)
   return(object)
 }
-
-#temp=FindNClusters(object, nCluster=nCluster,graph.name = "ImageFeaturePCA_snn")
-
-
-
 

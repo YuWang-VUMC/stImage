@@ -2,11 +2,12 @@
 % Please edit documentation in R/FindNClusters.R
 \name{FindNClusters}
 \alias{FindNClusters}
-\title{Title}
+\title{FindNClusters}
 \usage{
 FindNClusters(
   object,
   nCluster = 6,
+  graph.name = NULL,
   resolution = 0.8,
   resolutionMin = max(0.2, resolution - 1),
   resolutionMax = min(resolution + 1, 3),
@@ -15,11 +16,18 @@ FindNClusters(
 )
 }
 \arguments{
-\item{...}{}
-}
-\value{
+\item{object}{A \code{Seurat} object.}
 
+\item{nCluster}{number of clusters}
+
+\item{resolution}{numeric value for resolution setting}
+
+\item{resolutionMin}{numeric value for minimum resolution setting}
+
+\item{resolutionMax}{numeric value for maximum resolution setting}
+
+\item{verbose}{logical value for verbose message. FALSE as default}
 }
 \description{
-Title
+FindNClusters
 }

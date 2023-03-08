@@ -8,6 +8,7 @@ LoadImageFeatureVisium(
   dataDir,
   filename = "filtered_feature_bc_matrix.h5",
   imageFeatures,
+  RGBquantile = NULL,
   assay = "Spatial",
   slice = "slice1",
   filter.matrix = TRUE,
@@ -40,7 +41,8 @@ approximate conversion of mouse to human gene names which can be useful in an
 explorative analysis. For cross-species comparisons, orthologous genes should
 be identified across species and used instead.}
 
-\item{image}{An object of class VisiumV1. Typically, an output from \code{\link{Read10X_Image}}}
+\item{image}{An object of class VisiumV1. Typically, an output from
+\code{\link{Read10X_Image}}}
 
 \item{...}{Arguments passed to \code{\link{Read10X_h5}}}
 }

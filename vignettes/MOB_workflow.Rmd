@@ -1,5 +1,5 @@
 ---
-title: "integrate spatial transcriptome and Image with stImage (Adult_Mouse_Olfactory_Bulb)"
+title: "Adult_Mouse_Olfactory_Bulb Visium version"
 output:
   html_document:
     theme: united
@@ -38,74 +38,136 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(Seurat)
 library(stImage)
+library(SpatialPCA)
+library(BayesSpace)
 library(patchwork)
 library(reticulate)
-use_condaenv(condaenv = "myenv", conda = "/home/wangy67/miniconda3/bin/conda")
+use_condaenv(condaenv = "myenv")
 library(tensorflow)
 library(keras)
 ```
 
 
-# Prepare input file
+# Download raw dataset from 10xgenomics
 
-```{r define, echo = T, eval = T}
+Adult Mouse Olfactory Bulb (Spatial Gene Expression Dataset by Space Ranger 2.0.0) dataset can be accessed at https://www.10xgenomics.com/resources/datasets/adult-mouse-olfactory-bulb-1-standard-1. 
 
-tstamp <- gsub("-", "", as.character(Sys.Date()))
-pre_path = "/data/cqs/ywang/Zhao_image/stImage"
-proj_folder = "Adult_Mouse_Olfactory_Bulb"
-workDir = paste(pre_path, "SpatialTranscriptomicsImage", "stImage", sep = "/")
-h5_file = "Visium_Mouse_Olfactory_Bulb_filtered_feature_bc_matrix.h5"
+The following files will be needed:
+- [The hdf5 file of the gene expression matrix](https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_filtered_feature_bc_matrix.h5)
+- [Spatial imaging data](https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_spatial.tar.gz)
+- [raw H&E image (TIFF)](https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_image.tif) (The raw image file is optional. It's only needed if planning to extract image features from the raw image.)
 
-data_path=paste(pre_path, proj_folder, sep = "/") #need filtered_feature_bc_matrix.h5 file and spatial folder
-spatial_path = paste(data_path, "spatial", sep = "/")
+After downloading the above files, supposed that all of the files are put under a folder called "MOB". THe spatial image data should be uncompressed and renamed to "spatial" by `tar zxvf Visium_Mouse_Olfactory_Bulb_spatial.tar.gz; mv Visium_Mouse_Olfactory_Bulb_spatial spatial`.
 
-imgFile=paste(spatial_path, "tissue_hires_image.png", sep = "/")
-rawimg=paste(data_path, "Visium_Mouse_Olfactory_Bulb_image.tif", sep = "/")
+
+
+```{r define, echo = T, eval = F}
+data_path = "./"
+spatial_path <- paste(data_path, "spatial", sep = "/")
+h5_file <- "Visium_Mouse_Olfactory_Bulb_filtered_feature_bc_matrix.h5"
+
+# imgFile <- paste(spatial_path, "tissue_hires_image.png", sep = "/")
+rawimg <- "Visium_Mouse_Olfactory_Bulb_image.tif" #optional
 
 #positionTableFile is 10X format, Columns: Tissue; Y,X,ImageY,ImageX
 positionTableFile=paste(spatial_path, "tissue_positions_list.csv", sep = "/")
 
-patchSize=200
-
 ```
 
+
+<br>
 
 # Extract features
 
-```{r extract.feature, echo = T, eval = F}
-imageFeatures_raw=extract_features_Visium(spatial_path, rawImage = T, imgFile = rawimg, savePatchOnImage = paste0(proj_folder, "_rawpatch", "_", tstamp, ".png"))
+Image features and RGB quantile matrix will be extracted with VGG16 model of ImageNet from the `tissue_hires_image.png` under `spatial` folder.
 
-#write.csv(imageFeatures_raw,paste0(workDir,"/",proj_folder,"_features_raw_",tstamp,".csv"))
+```{r extract.feature, echo = T, eval = F}
+imageFeatures_list <- extract_features_Visium(spatial_path, 
+                                              rawImage = F, 
+                                              savePatchOnImage = "MOB_rawpatch.png")
+
+imageFeatures <- imageFeatures_list[["ImageFeature"]]
+RGBquantile <- imageFeatures_list[["RGBquantile"]]
 
 ```
 
-# load Image Feature into Seurat object
+<br>
+
+# Prepare object containing gene expression data and image feature matrix 
 
 ```{r load.data, echo = T, eval = F}
-#imageFeatures_raw <- read.csv(paste0(workDir,"/",proj_folder,"_features_raw_",tstamp,".csv"), row.names=1)
-
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- LoadImageFeatureVisium(data_path, filename = h5_file,
-                                  imageFeatures = imageFeatures_raw)
+MOB_obj <- LoadImageFeatureVisium(data_path, 
+                                  filename = h5_file,
+                                  imageFeatures = imageFeatures,
+                                  RGBquantile = RGBquantile)
 
 ```
 
-# Data analysis of Spatial matrix and ImageFeature matrix
+
+<br>
+
+# Preprocess of Spatial matrix and ImageFeature matrix
 
 ```{r data.process, echo = T, eval = F}
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- MultimodalPreProcess(Adult_Mouse_Olfactory_Bulb_rawimage_obj, normalizeMethod = "SCT", pcaDim_s=30, pcaDim_i=30, geneResolution=1.05, imageFeatureResolution=2.23)
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- MultiModalIntegrationVisium(Adult_Mouse_Olfactory_Bulb_rawimage_obj, pcaDim_s=30, pcaDim_i=30, imageAndGeneResolution=1.2, MultimodalMethod = c("WNN", "MCIA", "tICA"))
+clusterNum <- 8
+
+MOB_obj <- MultimodalPreProcess(
+  MOB_obj, 
+  normalizeMethod = "SCT", 
+  pcaDim_s=30, 
+  pcaDim_i=30, 
+  pcaDim_c = 6,
+  DimReducMethod = "PCA",
+  prefiltergenePercentCut=0,
+  prefilterimagePercentCut=0,
+  genePercentCut = 0.2,
+  imagePercentCut = 0.2)
+
+MOB_obj <- findSNNClusters(
+  MOB_obj,
+  dims = 1:30,
+  reduction = "SCTPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
+MOB_obj <- findSNNClusters(
+  MOB_obj,
+  dims = 1:30,
+  reduction = "ImageFeaturePCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
+MOB_obj <- findSNNClusters(
+  MOB_obj,
+  dims = 1:6,
+  reduction = "RGBPCA",
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
+MOB_obj <- MultiModalIntegrationVisium(
+  MOB_obj,
+  MultimodalMethod = "WNN",
+  pcaDim_s = 30,
+  pcaDim_i = 30,
+  reduction.list = list("SCTPCA", "ImageFeaturePCA"),
+  nCluster = clusterNum,
+  resolutionMax = 3
+)
+
 ```
 
 
 ```{r save.rds, echo = T, eval = F}
-saveRDS(Adult_Mouse_Olfactory_Bulb_rawimage_obj, paste0(workDir, "/", proj_folder, "_rawimage_object_vignette", tstamp, ".rds"))
+saveRDS(MOB_obj, paste0(data_path, "/", "MOB_object.rds"))
 ```
 
 
-```{r load.rds, echo = F, eval = T}
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- readRDS(paste0(workDir, "/", "Adult_Mouse_Olfactory_Bulb_rawimage_object_vignette20220726.rds"))
+```{r load.rds, echo = F, eval = F}
+MOB_obj <- readRDS(paste0(data_path, "/", "MOB_object.rds"))
 ```
-
 
 
 # Visualization
@@ -113,11 +175,11 @@ Adult_Mouse_Olfactory_Bulb_rawimage_obj <- readRDS(paste0(workDir, "/", "Adult_M
 ## DimPlot
 
 ```{r DimPlot, fig.dim = c(12, 4), echo = T}
-p1 <- DimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, reduction = 'st.umap', group.by = 'seurat_clusters', label = TRUE, 
+p1 <- DimPlot(MOB_obj, reduction = 'st.umap', group.by = 'seurat_clusters', label = TRUE, 
               repel = TRUE, label.size = 2.5) + ggtitle("SCT") + NoLegend()
-p2 <- DimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, reduction = 'if.umap', group.by = 'seurat_clusters', label = TRUE, 
+p2 <- DimPlot(MOB_obj, reduction = 'if.umap', group.by = 'seurat_clusters', label = TRUE, 
               repel = TRUE, label.size = 2.5) + ggtitle("ImageFeature") + NoLegend()
-p3 <- DimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, reduction = 'wnn.umap', label = TRUE, repel = TRUE, label.size = 2.5) + ggtitle("WNN") + NoLegend()
+p3 <- DimPlot(MOB_obj, reduction = 'wnn.umap', label = TRUE, repel = TRUE, label.size = 2.5) + ggtitle("WNN") + NoLegend()
 
 p1 + p2 + p3
 ```
@@ -125,39 +187,19 @@ p1 + p2 + p3
 ## SpatialDimPlot
 
 ```{r SpatialDimPlot, fig.dim = c(12, 4), echo = T}
-DefaultAssay(Adult_Mouse_Olfactory_Bulb_rawimage_obj) <- "Spatial"
-p4 <- SpatialDimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, group.by = "SCT_snn_res.1.05", label = TRUE, label.box = F, label.size = 2) + ggtitle("SCT") & NoLegend()
+DefaultAssay(MOB_obj) <- "Spatial"
+p4 <- SpatialDimPlot(MOB_obj, group.by = "SCT_snn_res.1.05", label = TRUE, label.box = F, label.size = 2) + ggtitle("SCT") & NoLegend()
 
-DefaultAssay(Adult_Mouse_Olfactory_Bulb_rawimage_obj) <- "ImageFeature"
-p5 <- SpatialDimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, group.by = "ImageFeature_snn_res.2.23", label = TRUE, label.box = F, label.size = 2) + ggtitle("ImageFeature") & NoLegend()
+DefaultAssay(MOB_obj) <- "ImageFeature"
+p5 <- SpatialDimPlot(MOB_obj, group.by = "ImageFeature_snn_res.2.23", label = TRUE, label.box = F, label.size = 2) + ggtitle("ImageFeature") & NoLegend()
 
-p6 <- SpatialDimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, group.by = "wsnn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("WNN") & NoLegend()
+p6 <- SpatialDimPlot(MOB_obj, group.by = "wsnn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("WNN") & NoLegend()
 
-p7 <- SpatialDimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, group.by = "mcia_snn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("MCIA") & NoLegend()
+p7 <- SpatialDimPlot(MOB_obj, group.by = "mcia_snn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("MCIA") & NoLegend()
 
-p8 <- SpatialDimPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, group.by = "tica_snn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("tICA") & NoLegend()
+p8 <- SpatialDimPlot(MOB_obj, group.by = "tica_snn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("tICA") & NoLegend()
 
 p4 + p5 + p6 + p7+ p8
-```
-
-## Image feature PCs
-
-```{r imagefeaturepcs, fig.dim = c(20, 40), echo = T}
-DefaultAssay(Adult_Mouse_Olfactory_Bulb_rawimage_obj) <- "ImageFeature"
-Adult_Mouse_Olfactory_Bulb_rawimage_obj <- AddMetaData(object = Adult_Mouse_Olfactory_Bulb_rawimage_obj, metadata = as.data.frame(Adult_Mouse_Olfactory_Bulb_rawimage_obj@reductions$ipca@cell.embeddings))
-p9 <- SpatialFeaturePlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, features = colnames(Adult_Mouse_Olfactory_Bulb_rawimage_obj@reductions$ipca@cell.embeddings), alpha = c(0.1, 1), ncol = 5)
-p9
-```
-
-## Weight of SCT and ImageFeature
-
-```{r weight.plot, fig.dim = c(8, 4), echo = T}
-
-p10 <- VlnPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, features = "SCT.weight", group.by = 'wsnn_res.1.2', sort = TRUE, pt.size = 0.1) + ggtitle("SCT") +
-  NoLegend()
-p11<- VlnPlot(Adult_Mouse_Olfactory_Bulb_rawimage_obj, features = "ImageFeature.weight", group.by = 'wsnn_res.1.2', sort = TRUE, pt.size = 0.1) + ggtitle("ImageFeature") +
-  NoLegend()
-p10 + p11
 ```
 
 

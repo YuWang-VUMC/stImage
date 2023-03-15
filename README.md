@@ -4,7 +4,7 @@ StImage is a R package for integrated analysis of spatial transcriptomics and th
 
 
 
-<img align="top" src="https://github.com/YuWang-VUMC/stImage/man/figures/stImage_workflow.png" alt="drawing" width="600"/>
+<img align="top" src="https://github.com/YuWang-VUMC/stImage/blob/master/man/figures/stImage_workflow.png" alt="drawing" width="600"/>
   
   
 ## Installation

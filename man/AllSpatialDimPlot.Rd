@@ -9,9 +9,34 @@ AllSpatialDimPlot(
   cluster.frame = TRUE,
   cluster.highlight = NULL,
   col = NULL,
+  groups = NULL,
   ...
 )
 }
+\arguments{
+\item{object}{a seurat object}
+
+\item{cluster.frame}{a logical value to define if show the cluster frame}
+
+\item{cluster.highlight}{the cluster id to show if \code{cluster.frame} is
+TRUE}
+
+\item{col}{a color palette}
+
+\item{groups}{the colname of clusters in metadata of object}
+
+\item{...}{Arguments passed to \code{\link{ggplot}}}
+}
+\value{
+a list of ggplot objects
+}
 \description{
 AllSpatialDimPlot
+}
+\examples{
+\dontrun{
+  plots <- AllSpatialDimPlot(object,
+  cluster.frame = F,
+  col = colors)
+}
 }

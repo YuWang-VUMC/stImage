@@ -16,7 +16,12 @@ DoBayesSpaceIntegration(
 
 \item{clusterNum}{number of clusters}
 
+\item{BayesSpaceClusterNum}{number of clusters by BayesSpace method}
+
 \item{assay}{the two assays used for integration}
+}
+\value{
+a seurat object
 }
 \description{
 DoBayesSpaceIntegration

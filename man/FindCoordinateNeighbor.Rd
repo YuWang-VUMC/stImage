@@ -11,6 +11,9 @@ FindCoordinateNeighbor(spotsCoordinate, n = 6)
 
 \item{n}{number of neighbor spots}
 }
+\value{
+a list containing neighbors of spots
+}
 \description{
 FindCoordinateNeighbor
 }

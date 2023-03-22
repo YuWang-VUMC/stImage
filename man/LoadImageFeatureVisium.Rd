@@ -24,8 +24,11 @@ SpaceRanger}
 \item{filename}{Directory containing the H5 file specified by \code{filename}
 and the image data in a subdirectory called \code{spatial}}
 
-\item{imageFeatures}{image feature matrix extracted from ImageFeature.R or
-provided by user}
+\item{imageFeatures}{image feature matrix extracted from
+ExtractImageFeature.R or provided by user}
+
+\item{RGBquantile}{RGB quantile matrix extracted from ExtractImageFeature.R
+or provided by user}
 
 \item{assay}{assay name for storing gene expression matrix in seurat object,
 default value: "Spatial"}
@@ -36,10 +39,10 @@ default value: "Spatial"}
 \item{filter.matrix}{Only keep spots that have been determined to be over
 tissue, default value: TRUE}
 
-\item{to.upper}{Converts all feature names to upper case. This can provide an
-approximate conversion of mouse to human gene names which can be useful in an
-explorative analysis. For cross-species comparisons, orthologous genes should
-be identified across species and used instead.}
+\item{to.upper}{Converts all feature names to upper case. This can provide
+an approximate conversion of mouse to human gene names which can be useful
+in an explorative analysis. For cross-species comparisons, orthologous genes
+should be identified across species and used instead.}
 
 \item{image}{An object of class VisiumV1. Typically, an output from
 \code{\link{Read10X_Image}}}

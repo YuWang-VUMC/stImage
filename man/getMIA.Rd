@@ -15,6 +15,9 @@ getMIA(singlecellobject, sc_marker = NULL, st_marker = NULL)
 \item{st_marker}{data frame of marker genes of spatial clusters from
 spatial transcriptomics data}
 }
+\value{
+a dataframe
+}
 \description{
 getMIA function of Multimodal intersection analysis (MIA) proposed in
 Moncada et al., 2020 (https://doi.org/10.1038/s41587-019-0392-8).

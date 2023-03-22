@@ -57,6 +57,9 @@ FALSE as default}
 2) weights from morphological Similarly and physicial distance;
 3) physical distance only.}
 }
+\value{
+a seurat object
+}
 \description{
 dostLearn
 }

@@ -26,8 +26,21 @@ extract_features_Visium(
 \item{...}{Arguments passed to \code{\link{extract_features}}}
 }
 \value{
-A matrix
+A list of two matrices
 }
 \description{
 extract image features for Visium dataset
+}
+\examples{
+\dontrun{
+# Visium platform
+imageFeatures.list <-
+  extract_features_Visium(
+    spatial_path,
+    rawImage = T,
+    imgFile = rawimg,
+    savePatchOnImage = NULL)
+imageFeatures <- imageFeatures.list[["ImageFeature"]]
+RGBquantile <- imageFeatures.list[["RGBquantile"]]
+}
 }

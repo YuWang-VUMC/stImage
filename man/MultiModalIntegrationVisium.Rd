@@ -70,6 +70,9 @@ when do WNN integration. 1 as default}
 
 \item{...}{Arguments passed to \code{\link{findSNNClusters}}}
 }
+\value{
+a seurat object
+}
 \description{
 integrating and processing for Visium dataset
 }

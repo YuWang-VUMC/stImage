@@ -9,6 +9,9 @@ bayesSpaceChainMatrixSimilarity(bayesSpaceResultChainMatrix)
 \arguments{
 \item{bayesSpaceResultChainMatrix}{MCMC chain saved in object}
 }
+\value{
+BayesSpace similarity matrix
+}
 \description{
 bayesSpaceChainMatrixSimilarity
 }

@@ -20,6 +20,8 @@ FindNClusters(
 
 \item{nCluster}{number of clusters}
 
+\item{graph.name}{Name of graph to use for the clustering algorithm}
+
 \item{resolution}{numeric value for resolution setting}
 
 \item{resolutionMin}{numeric value for minimum resolution setting}
@@ -27,6 +29,11 @@ FindNClusters(
 \item{resolutionMax}{numeric value for maximum resolution setting}
 
 \item{verbose}{logical value for verbose message. FALSE as default}
+
+\item{...}{arguments passed to FindClustersForUniroot or FindClusters}
+}
+\value{
+a seurat object
 }
 \description{
 FindNClusters

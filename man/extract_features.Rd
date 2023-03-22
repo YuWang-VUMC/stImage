@@ -26,6 +26,8 @@ suggested.}
 original, full-resolution image to pixel positions in the image file used
 here. 1 if used the raw image.}
 
+\item{saveRawImage}{logical value to define wether save raw image to file.}
+
 \item{savePatchOnImage}{path and file name of plotting patches on the image.}
 }
 \value{
@@ -45,16 +47,6 @@ imageFeatures.list <-
     rawImage = T,
     savePatchOnImage = paste0("sampleName_rawpatch_", patchsize, ".png")
   )
-imageFeatures <- imageFeatures.list[["ImageFeature"]]
-RGBquantile <- imageFeatures.list[["RGBquantile"]]
-
-# Visium platform
-imageFeatures.list <-
-  extract_features_Visium(
-    spatial_path,
-    rawImage = T,
-    imgFile = rawimg,
-    savePatchOnImage = NULL)
 imageFeatures <- imageFeatures.list[["ImageFeature"]]
 RGBquantile <- imageFeatures.list[["RGBquantile"]]
 }

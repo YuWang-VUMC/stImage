@@ -15,6 +15,40 @@ AllSpatialFeaturePlot(
   ...
 )
 }
+\arguments{
+\item{object}{a seurat object}
+
+\item{normalizeMethod}{parameter for choosing the assay for gene expression
+visualization. Can be either "SCT" or "log"}
+
+\item{integreation.method}{the integration method for the final clustering.
+related to the cluster frame if \code{cluster.frame} is TRUE}
+
+\item{features}{a vector to define features want to plot}
+
+\item{cluster.frame}{a logical value to define if show the cluster frame}
+
+\item{cluster.highlight}{the cluster id to show if \code{cluster.frame} is
+TRUE}
+
+\item{col}{a color palette}
+
+\item{...}{Arguments passed to \code{\link{ggplot}}}
+}
+\value{
+a list of ggplot objects
+}
 \description{
 AllSpatialFeaturePlot
+}
+\examples{
+\dontrun{
+  plots <- AllSpatialFeaturePlot(object,
+  normalizeMethod = "SCT",
+  integreation.method = "wnn",
+  features = c("TM4SF1", "S100A4"),
+  cluster.frame = TRUE,
+  col = colors,
+  cluster.highlight = 1)
+}
 }

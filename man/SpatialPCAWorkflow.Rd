@@ -30,10 +30,16 @@ used in large sample size datasets).}
 low-rank approximation on the kernel matrix, otherwise "FALSE" for
 calculation without low-rank approximation on the kernel matrix.}
 }
+\value{
+a SpatialPCA object
+}
 \description{
 SpatialPCAWorkflow
 }
 \examples{
-\dontrun{SPCAobj <- SpatialPCAWorkflow(SPCAobj, SpatialPCnum = pcaDim)}
+\dontrun{
+SPCAobj <- SpatialPCAWorkflow(SPCAobj,
+SpatialPCnum = pcaDim)
+}
 
 }

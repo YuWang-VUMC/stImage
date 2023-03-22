@@ -24,6 +24,9 @@ doSpark(
 \item{method}{set automatically based on the sample size: if < 1000 spots,
 \code{method} == "spark", otherwise "sparkx".}
 }
+\value{
+a matrix
+}
 \description{
 doSpark
 }

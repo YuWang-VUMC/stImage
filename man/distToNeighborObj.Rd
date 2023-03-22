@@ -11,6 +11,9 @@ distToNeighborObj(distMatrix, k.param = 20)
 
 \item{k.param}{number of k}
 }
+\value{
+a Neighbor object
+}
 \description{
 distToNeighborObj
 }

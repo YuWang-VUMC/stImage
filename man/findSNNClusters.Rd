@@ -43,6 +43,8 @@ NULL}
 
 \item{nCluster}{number of clusters}
 
+\item{k.param}{Defines k for the k-nearest neighbor algorithm}
+
 \item{clusterColumnName}{column name in meta data to store the clustering
 results}
 
@@ -50,7 +52,12 @@ results}
 
 \item{reduction.key}{value for the projected UMAP key}
 
+\item{RunUMAP}{logical value to define if or not to run RunUMAP}
+
 \item{...}{Arguments passed to \code{\link{FindNClusters}}}
+}
+\value{
+a seurat object
 }
 \description{
 findSNNClusters

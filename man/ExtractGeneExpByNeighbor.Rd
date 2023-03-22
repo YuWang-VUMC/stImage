@@ -15,6 +15,9 @@ ExtractGeneExpByNeighbor(geneExp, spotToNeighborList, spotsImageSimilarity)
 \item{spotsImageSimilarity}{similarity matrix between spots calculated with
 the neighbor image features}
 }
+\value{
+a gene expression matrix
+}
 \description{
 ExtractGeneExpByNeighbor
 }

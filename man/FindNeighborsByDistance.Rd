@@ -39,6 +39,9 @@ prune everything).}
 
 \item{k.param}{number of k}
 }
+\value{
+a seurat object
+}
 \description{
 FindNeighborsByDistance
 }

@@ -13,7 +13,12 @@ FindClustersForUniroot(x, object, nCluster = 6, graph.name = NULL, ...)
 
 \item{nCluster}{number of clusters}
 
+\item{graph.name}{Name of graph to use for the clustering algorithm}
+
 \item{...}{Arguments passed to \code{\link{FindClusters}}}
+}
+\value{
+an integer number
 }
 \description{
 FindClustersForUniroot

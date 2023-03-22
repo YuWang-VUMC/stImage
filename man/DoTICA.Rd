@@ -24,6 +24,9 @@ individual entries of data$L above).}
 
 \item{method}{either \code{FOBI} or \code{JADE}}
 }
+\value{
+a list
+}
 \description{
 tICA
 }

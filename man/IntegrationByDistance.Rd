@@ -40,6 +40,9 @@ weights of distance}
 
 \item{minDiff}{minimum resdiue to add when distance calculation}
 }
+\value{
+a seurat object
+}
 \description{
 IntegrationByDistance
 }

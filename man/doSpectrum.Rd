@@ -40,6 +40,9 @@ default.}
 
 \item{reduction.key}{Value for the projected UMAP key}
 }
+\value{
+a seurat object
+}
 \description{
 doSpectrum
 }

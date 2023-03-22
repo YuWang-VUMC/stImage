@@ -28,7 +28,12 @@ values larger than minimum value}
 
 \item{pcaDim}{number of PCs when running dimension reduction}
 
-\item{...}{}
+\item{customGenes}{vector of custom genes to run dimension reduction step}
+
+\item{...}{potentially needed Arguments}
+}
+\value{
+a seurat object
 }
 \description{
 runDimReduc

@@ -13,6 +13,9 @@ NeighborDist(distMatrix, neighborList, removeFirst = TRUE)
 
 \item{removeFirst}{logical value to remove the spot itself. TRUE as default}
 }
+\value{
+a dist dataframe
+}
 \description{
 NeighborDist
 }

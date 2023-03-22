@@ -9,6 +9,14 @@ gg_color_hue(n)
 \arguments{
 \item{n}{number of colors}
 }
+\value{
+a color palette
+}
 \description{
 gg_color_hue
+}
+\examples{
+\dontrun{
+  gg_color_hue(8)
+}
 }

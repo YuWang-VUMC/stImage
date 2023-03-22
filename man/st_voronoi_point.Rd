@@ -9,6 +9,17 @@ st_voronoi_point(points)
 \arguments{
 \item{points}{sf data frame of points}
 }
+\value{
+a sf data frame
+}
 \description{
 st_voronoi_point
+}
+\examples{
+\dontrun{
+  location <- GetTissueCoordinates(object)
+  p <- st_as_sf(data.frame(x=location$y, y=dplyr::desc(location$x),
+  A=1:nrow(location)), coords=1:2)
+  v <- st_voronoi_point(p)
+}
 }

@@ -41,6 +41,9 @@ doBayesSpace(
 
 \item{nCluster}{the number of clusters}
 }
+\value{
+a seurat object
+}
 \description{
 doBayesSpace
 }

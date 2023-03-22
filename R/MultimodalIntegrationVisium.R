@@ -1,5 +1,4 @@
 #' integrating and processing for Visium dataset
-#' @inheritParams Seurat
 #' @param object A \code{Seurat} object.
 #' @param normalizeMethod the normalization method for gene expression matrix.
 #' \code{log} for \code{LogNormalize}, \code{SCT} for \code{SCTransform}.
@@ -29,14 +28,15 @@
 #' @param knn.range The number of approximate neighbors to compute
 #' @param ... Arguments passed to \code{\link{findSNNClusters}}
 #'
-#' @return
+#' @return a seurat object
 #' @importFrom omicade4 mcia
 #' @importFrom IntNMF nmf.mnnals
 #' @importFrom tensorBSS  tensorCentering tPCA tensorTransform tFOBI tJADE
+#' @importFrom Seurat FindMultiModalNeighbors DefaultAssay CreateDimReducObject
+#' @importFrom Seurat DefaultAssay<- FindNeighbors Cells
 #' @export
 #'
-#' @examples
-#' \dontrun{
+#' @examples \dontrun{
 #' object <-
 #'   MultiModalIntegrationVisium(
 #'     object,
@@ -161,6 +161,7 @@ MultiModalIntegrationVisium <- function(
   }
   list_pos <- list()
 
+  # create non-negative matrices
   for (j in 1:length(list)) {
     if (min(list[[j]]) < 0) {
       list_pos[[j]] <- list[[j]] + abs(min(list[[j]]))

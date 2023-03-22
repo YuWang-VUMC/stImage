@@ -8,20 +8,21 @@
 #' @param percentCut cutoff value of percentage of spots of their
 #' values larger than minimum value
 #' @param pcaDim number of PCs when running dimension reduction
-#' @param ...
+#' @param customGenes vector of custom genes to run dimension reduction step
+#' @param ... potentially needed Arguments
 #'
-#' @return
+#' @return a seurat object
 #' @importFrom SpatialPCA CreateSpatialPCAObject
+#' @importFrom Seurat VariableFeatures RunPCA CreateDimReducObject
+#' @importFrom Seurat VariableFeatures<-
 #' @export
-#'
-#' @examples
 #'
 runDimReduc <- function(object,
                         DimReducMethod = "PCA",
                         assay = "SCT",
                         percentCut = 0.05,
-                        pcaDim=30,
-                        customGenes=NULL,
+                        pcaDim = 30,
+                        customGenes = NULL,
                         ...) {
 
   DimReducName <- paste0(assay, "", DimReducMethod)
@@ -86,7 +87,7 @@ runDimReduc <- function(object,
     SPCAobj <- SpatialPCAWorkflow(SPCAobj, SpatialPCnum = pcaDim)
     SPCApcs <- t(SPCAobj@SpatialPCs)
     colnames(SPCApcs) <- paste0(DimReducKeyName, 1:ncol(SPCApcs))
-    object <- subset(object, cells=row.names(SPCApcs))
+    object <- subset(object, cells = row.names(SPCApcs))
     object[[DimReducName]] <- CreateDimReducObject(embeddings = SPCApcs,
                                                    key = DimReducKeyName,
                                                    assay = assay)

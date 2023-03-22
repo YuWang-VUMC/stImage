@@ -11,6 +11,7 @@
 #' @param scaleFactor A scaling factor that converts pixel positions in the
 #' original, full-resolution image to pixel positions in the image file used
 #' here. 1 if used the raw image.
+#' @param saveRawImage logical value to define wether save raw image to file.
 #' @param savePatchOnImage path and file name of plotting patches on the image.
 #'
 #' @return A list of two matrices
@@ -19,10 +20,9 @@
 #' @importFrom keras image_to_array
 #' @importFrom keras imagenet_preprocess_input
 #' @importFrom plotrix draw.circle
-#' @export
-#'
-#' @examples
-#' \dontrun{
+#' @importFrom dplyr %>%
+#' @importFrom grDevices dev.off as.raster png
+#' @examples \dontrun{
 #' # ST platform
 #' imageFeatures.list <-
 #'   extract_features(
@@ -32,16 +32,6 @@
 #'     rawImage = T,
 #'     savePatchOnImage = paste0("sampleName_rawpatch_", patchsize, ".png")
 #'   )
-#' imageFeatures <- imageFeatures.list[["ImageFeature"]]
-#' RGBquantile <- imageFeatures.list[["RGBquantile"]]
-#'
-#' # Visium platform
-#' imageFeatures.list <-
-#'   extract_features_Visium(
-#'     spatial_path,
-#'     rawImage = T,
-#'     imgFile = rawimg,
-#'     savePatchOnImage = NULL)
 #' imageFeatures <- imageFeatures.list[["ImageFeature"]]
 #' RGBquantile <- imageFeatures.list[["RGBquantile"]]
 #' }
@@ -142,11 +132,21 @@ extract_features <- function(imgFile,
 #' @param imgFile the image file used here if \code{rawImage} is TRUE.
 #' @param ... Arguments passed to \code{\link{extract_features}}
 #'
-#' @return A matrix
+#' @return  A list of two matrices
 #' @importFrom jsonlite fromJSON
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
+#' # Visium platform
+#' imageFeatures.list <-
+#'   extract_features_Visium(
+#'     spatial_path,
+#'     rawImage = T,
+#'     imgFile = rawimg,
+#'     savePatchOnImage = NULL)
+#' imageFeatures <- imageFeatures.list[["ImageFeature"]]
+#' RGBquantile <- imageFeatures.list[["RGBquantile"]]
+#' }
 extract_features_Visium <- function(spatialDir,
                                     patchSize=NULL,
                                     rawImage = FALSE,
@@ -174,13 +174,13 @@ extract_features_Visium <- function(spatialDir,
     imgFile <- paste0(spatialDir,"/tissue_hires_image.png")
     scaleFactor <- fromJSON(scaleFactorFile)$tissue_hires_scalef
   }
-  imageFeatures <- extract_features(imgFile,
+  image_list <- extract_features(imgFile,
                                     positionTable,
                                     patchSize=patchSize,
                                     scaleFactor=scaleFactor,
                                     ...)
 
-  return(imageFeatures)
+  return(image_list)
 }
 
 

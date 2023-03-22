@@ -4,14 +4,13 @@
 #' @include similarityIntegration.R
 #' @param dataObj A \code{Seurat} object.
 #' @param clusterNum number of clusters
-#' @param BayesSpaceClusterNum
+#' @param BayesSpaceClusterNum number of clusters by BayesSpace method
 #' @param assay the two assays used for integration
 #'
-#' @return
+#' @return a seurat object
 #' @export
 #'
-#' @examples
-#' \dontrun{
+#' @examples \dontrun{
 #'   object <- DoBayesSpaceIntegration(
 #'     object,
 #'     clusterNum = clusterNum)

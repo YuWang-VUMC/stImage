@@ -27,10 +27,13 @@
 #'
 #' @return  A \code{Seurat} object
 #' @importFrom SpatialPCA CreateSpatialPCAObject
+#' @importFrom Seurat SCTransform DefaultAssay NormalizeData ScaleData
+#' @importFrom Seurat VariableFeatures<-
+#' @importFrom Seurat FindVariableFeatures VariableFeatures DefaultAssay<-
+#' @importFrom dplyr %>%
 #' @export
 #'
-#' @examples
-#' \dontrun{
+#' @examples \dontrun{
 #' object <-
 #'   MultimodalPreProcess(
 #'     object,

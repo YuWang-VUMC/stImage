@@ -1,15 +1,13 @@
 #' getMIA function of Multimodal intersection analysis (MIA) proposed in
 #' Moncada et al., 2020 (https://doi.org/10.1038/s41587-019-0392-8).
-#' @inheritParams Seurat
 #' @param singlecellobject A \code{Seurat} object of scRNAseq data.
 #' @param sc_marker data frame of marker genes of cell types from scRNAseq data
 #' @param st_marker data frame of marker genes of spatial clusters from
 #' spatial transcriptomics data
 #'
-#' @return
+#' @return a dataframe
 #' @export
 #'
-#' @examples
 getMIA <- function(singlecellobject,
                    sc_marker = NULL,
                    st_marker = NULL

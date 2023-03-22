@@ -12,12 +12,17 @@ Authors@R: c(
 URL: https://github.com/YuWang-VUMC/stImage
 BugReports: https://github.com/YuWang-VUMC/stImage/issues
 Depends:
-    R (>= 4.0.0),
-    methods
+    R (>= 4.0.0)
 Imports:
+    rlang,
+    dplyr,
+    tidyr,
+    ggplot2,
+    S4Vectors,
+    grDevices,
+    png,
     Seurat,
     jsonlite,
-    png,
     tensorflow,
     keras,
     plotrix,
@@ -35,10 +40,14 @@ Imports:
     rhdf5,
     sp,
     sf
+Suggests: 
+    knitr, 
+    rmarkdown
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.2
+VignetteBuilder: knitr
 Collate: 
     'similarityIntegration.R'
     'findSNNClusters.R'

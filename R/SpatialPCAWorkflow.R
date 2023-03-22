@@ -1,5 +1,4 @@
 #' SpatialPCAWorkflow
-#' @inheritParams SpatialPCA
 #' @param SpatialPCAObj A \code{SpatialPCA} object
 #' @param SpatialPCnum number of PCs when running SpatialPCA
 #' @param kerneltype The type of kernel to be used, either "gaussian" for
@@ -13,14 +12,16 @@
 #' low-rank approximation on the kernel matrix, otherwise "FALSE" for
 #' calculation without low-rank approximation on the kernel matrix.
 #'
-#' @return
+#' @return a SpatialPCA object
 #' @importFrom SpatialPCA SpatialPCA_buildKernel
 #' @importFrom SpatialPCA SpatialPCA_EstimateLoading
 #' @importFrom SpatialPCA SpatialPCA_SpatialPCs
 #' @export
 #'
-#' @examples
-#' \dontrun{SPCAobj <- SpatialPCAWorkflow(SPCAobj, SpatialPCnum = pcaDim)}
+#' @examples \dontrun{
+#' SPCAobj <- SpatialPCAWorkflow(SPCAobj,
+#' SpatialPCnum = pcaDim)
+#' }
 #'
 SpatialPCAWorkflow <- function(SpatialPCAObj,
                                SpatialPCnum = 30,

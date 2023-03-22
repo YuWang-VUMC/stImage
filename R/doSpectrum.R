@@ -1,5 +1,4 @@
 #' doSpectrum
-#' @inheritParams Spectrum
 #' @param dataObj A \code{Seurat} object.
 #' @param reduction.list list of dimension reduction matrices for integration
 #' @param graphs graph slot used for similarity calculation if don't define
@@ -15,11 +14,10 @@
 #' @importFrom Spectrum CNN_kernel
 #' @importFrom Spectrum integrate_similarity_matrices
 #' @importFrom Spectrum cluster_similarity
-#'
-#' @return
+#' @importFrom Seurat RunUMAP
+#' @return a seurat object
 #' @export
 #'
-#' @examples
 doSpectrum <- function(dataObj,
                        reduction.list = NULL,
                        graphs = NULL,

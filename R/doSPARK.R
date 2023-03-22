@@ -1,5 +1,4 @@
 #' doSpark
-#' @inheritParams SPARK
 #' @param object A \code{Seurat} object
 #' @param n.core number of cores for parallel computing
 #' @param genePercentCut The percentage of cells that are expressed for analysis
@@ -7,14 +6,11 @@
 #' @param method set automatically based on the sample size: if < 1000 spots,
 #' \code{method} == "spark", otherwise "sparkx".
 #'
-#' @return
-#' @importFrom SPARK CreateSPARKObject
-#' @importFrom SPARK spark.vc
-#' @importFrom SPARK spark.test
-#' @importFrom SPARK sparkx
+#' @return a matrix
+#' @importFrom SPARK CreateSPARKObject spark.vc spark.test sparkx
+#' @importFrom Seurat Cells GetTissueCoordinates
 #' @export
 #'
-#' @examples
 doSpark <- function(object,
                     n.core = 1,
                     genePercentCut = 0.05,

@@ -4,18 +4,20 @@
 #' SpaceRanger
 #' @param filename Directory containing the H5 file specified by \code{filename}
 #' and the image data in a subdirectory called \code{spatial}
-#' @param imageFeatures image feature matrix extracted from ImageFeature.R or
-#' provided by user
+#' @param imageFeatures image feature matrix extracted from
+#' ExtractImageFeature.R or provided by user
+#' @param RGBquantile RGB quantile matrix extracted from ExtractImageFeature.R
+#' or provided by user
 #' @param assay assay name for storing gene expression matrix in seurat object,
 #' default value: "Spatial"
 #' @param slice Name for the stored image of the tissue slice, default value:
 #' "slice1"
 #' @param filter.matrix Only keep spots that have been determined to be over
 #' tissue, default value: TRUE
-#' @param to.upper Converts all feature names to upper case. This can provide an
-#' approximate conversion of mouse to human gene names which can be useful in an
-#' explorative analysis. For cross-species comparisons, orthologous genes should
-#' be identified across species and used instead.
+#' @param to.upper Converts all feature names to upper case. This can provide
+#' an approximate conversion of mouse to human gene names which can be useful
+#' in an explorative analysis. For cross-species comparisons, orthologous genes
+#' should be identified across species and used instead.
 #' @param image An object of class VisiumV1. Typically, an output from
 #' \code{\link{Read10X_Image}}
 #' @param ... Arguments passed to \code{\link{Read10X_h5}}
@@ -24,7 +26,7 @@
 #' @importFrom png readPNG
 #' @importFrom grid rasterGrob
 #' @importFrom jsonlite fromJSON
-#'
+#' @importFrom Seurat CreateAssayObject Load10X_Spatial
 #' @export
 #' @concept preprocessing
 #'
@@ -83,6 +85,8 @@ LoadImageFeatureVisium <- function(dataDir,
 #' \code{extract_features} or provided by user
 #' @param positionTable matrix containing a table with rows that correspond to
 #' spots, see 'spatial/tissue_positions.csv' in Visium dataset for example
+#' @param RGBquantile RGB quantile matrix extracted from ExtractImageFeature.R
+#' or provided by user
 #' @param project project name when create seurat object
 #' @param ... Arguments passed to \code{\link{Read10X_h5}}
 #'
@@ -90,7 +94,7 @@ LoadImageFeatureVisium <- function(dataDir,
 #' @importFrom png readPNG
 #' @importFrom grid rasterGrob
 #' @importFrom jsonlite fromJSON
-#'
+#' @importFrom Seurat CreateAssayObject CreateSeuratObject
 #' @export
 #' @concept preprocessing
 #'

@@ -1,5 +1,4 @@
 #' findSNNClusters
-#' @inheritParams Seurat
 #' @param object A \code{Seurat} object.
 #' @param reduction dimension reduction method
 #' @param graph.name naming parameter for stored (S)NN graph
@@ -10,17 +9,19 @@
 #' @param assay Assay to use in construction of (S)NN; used only when dims is
 #' NULL
 #' @param nCluster  number of clusters
+#' @param k.param Defines k for the k-nearest neighbor algorithm
 #' @param clusterColumnName column name in meta data to store the clustering
 #' results
 #' @param reduction.name name of projected UMAP to store in the query
 #' @param reduction.key value for the projected UMAP key
+#' @param RunUMAP logical value to define if or not to run RunUMAP
 #' @param ... Arguments passed to \code{\link{FindNClusters}}
-#'
-#' @return
+#' @importFrom Seurat FindNeighbors DefaultAssay RunUMAP FindClusters
+#' @importFrom Seurat DefaultAssay<-
+#' @return a seurat object
 #' @export
 #'
-#' @examples
-#' \dontrun{
+#' @examples \dontrun{
 #' object <- findSNNClusters(
 #'   object,
 #'   dims = 1:20,
@@ -41,11 +42,11 @@ findSNNClusters <- function(
     nCluster = NULL,
     k.param = 20,
     clusterColumnName = if(!is.null(nCluster))
-      paste0(reduction, "_cluster",nCluster) else NULL,
+      paste0(reduction, "_cluster", nCluster) else NULL,
     reduction.name = ifelse(!is.null(reduction),
-                            paste0(reduction,'UMAP'),paste0(nn.name,'UMAP')),
+                            paste0(reduction,'UMAP'), paste0(nn.name,'UMAP')),
     reduction.key = ifelse(!is.null(reduction),
-                           paste0(reduction,'UMAP_'),paste0(nn.name,'UMAP_')),
+                           paste0(reduction,'UMAP_'), paste0(nn.name,'UMAP_')),
     RunUMAP = TRUE,
     ...) {
   DefaultAssay(object) <- assay

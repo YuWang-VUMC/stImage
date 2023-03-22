@@ -1,6 +1,4 @@
 #' doBayesSpace
-#' @inheritParams SingleCellExperiment
-#' @inheritParams BayesSpace
 #' @param dataObj A \code{Seurat} object.
 #' @param platform ST or Visium platform
 #' @param assay assay of the object used
@@ -12,14 +10,16 @@
 #' @param nn.name Name of knn output on which to run UMAP
 #' @param reduction dimension reduction matrix in \code{reductions} slot
 #' @param nCluster  the number of clusters
-#' @importFrom SingleCellExperiment SingleCellExperiment
+#' @importFrom SingleCellExperiment SingleCellExperiment reducedDims
+#' @importFrom SingleCellExperiment reducedDims<-
 #' @importFrom BayesSpace spatialPreprocess spatialCluster
+#' @importFrom Seurat VariableFeatures
 #' @importFrom rhdf5 h5read
-#' @return
+#' @importFrom S4Vectors metadata
+#' @return a seurat object
 #' @export
 #'
-#' @examples
-#' \dontrun{
+#' @examples \dontrun{
 #'   object <- doBayesSpace(
 #'     object,
 #'     platform="ST",
@@ -107,10 +107,9 @@ doBayesSpace <- function(dataObj,
 #'
 #' @param bayesSpaceResultChainMatrix  MCMC chain saved in object
 #'
-#' @return
+#' @return BayesSpace similarity matrix
 #' @export
 #'
-#' @examples
 bayesSpaceChainMatrixSimilarity <- function(bayesSpaceResultChainMatrix) {
   nRep <- nrow(bayesSpaceResultChainMatrix)
   nSample <- ncol(bayesSpaceResultChainMatrix)

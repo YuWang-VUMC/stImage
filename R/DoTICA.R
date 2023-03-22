@@ -18,11 +18,9 @@
 #' individual entries of data$L above).
 #' @param method either \code{FOBI} or \code{JADE}
 #'
-#' @return
+#' @return a list
 #' @importFrom tensorBSS tensorCentering tPCA tensorTransform tFOBI tJADE
 #' @export
-#'
-#' @examples
 #'
 DoTICA <- function(data,
                    dim,
@@ -31,7 +29,7 @@ DoTICA <- function(data,
   ng <- dim(data)[3]
   dim.v <- c(nt, max(dim))
   cdata.a <- tensorCentering(data)
-  tpca.o <- tPCA(cdata.a, d=dim.v)
+  tpca.o <- tPCA(cdata.a, d = dim.v)
   pdata.a <- tensorTransform(cdata.a, t(tpca.o$U[[2]]), 2) ## whiten the data
 
 

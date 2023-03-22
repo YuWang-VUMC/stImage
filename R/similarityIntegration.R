@@ -3,10 +3,9 @@
 #' @param distMatrix distance matrix
 #' @param k.param number of k
 #'
-#' @return
+#' @return a Neighbor object
 #' @export
 #'
-#' @examples
 distToNeighborObj <- function(distMatrix,
                               k.param = 20) {
 
@@ -41,13 +40,12 @@ distToNeighborObj <- function(distMatrix,
 #' @param neighborList list of neighbor
 #' @param removeFirst logical value to remove the spot itself. TRUE as default
 #'
-#' @return
+#' @return a dist dataframe
 #' @export
 #'
-#' @examples
 NeighborDist <- function(distMatrix,
                          neighborList,
-                         removeFirst=TRUE) {
+                         removeFirst = TRUE) {
   if (class(neighborList) == "Neighbor") { #make it a list
     neighborList <- lapply(data.frame(t(neighborList@nn.idx)), function(x) x)
   }
@@ -88,10 +86,9 @@ NeighborDist <- function(distMatrix,
 #' @param k.param  number of k
 #' @param minDiff minimum resdiue to add when distance calculation
 #'
-#' @return
+#' @return a seurat object
 #' @export
 #'
-#' @examples
 IntegrationByDistance <- function(
     dataObj = NULL,
     distMatrix = c("SCTBayesSpace_dist_Cluster10",
@@ -130,13 +127,13 @@ IntegrationByDistance <- function(
   distMatrix2InNeighbor1 <- NeighborDist(distMatrix2, distMatrix1NeighborObj)
   distMatrix2InNeighbor2 <- NeighborDist(distMatrix2, distMatrix2NeighborObj)
 
-  snnMatrix1SmallIndexList=list()
+  snnMatrix1SmallIndexList <- list()
   for (i in 1:nrow(snnMatrix1)) {
     snnMatrix1SmallIndexList[[i]] <-
       order(snnMatrix1[i, ])[1:k.param]
     #subject Ind with smallest non zero SNN (Jarcard index)
   }
-  snnMatrix2SmallIndexList=list()
+  snnMatrix2SmallIndexList <- list()
   for (i in 1:nrow(snnMatrix2)) {
     snnMatrix2SmallIndexList[[i]] <-
       order(snnMatrix2[i, ])[1:k.param]
@@ -145,11 +142,11 @@ IntegrationByDistance <- function(
 
   distMatrix1InSmallIndex1 <- NeighborDist(distMatrix1,
                                            snnMatrix1SmallIndexList,
-                                           removeFirst=FALSE)
+                                           removeFirst = FALSE)
   #distance to furthest neighbors. don't need to remove first (self)
   distMatrix2InSmallIndex2 <- NeighborDist(distMatrix2,
                                            snnMatrix2SmallIndexList,
-                                           removeFirst=FALSE)
+                                           removeFirst = FALSE)
 
   #caculate values
   theta1InNeighbor1 <-
@@ -172,8 +169,8 @@ IntegrationByDistance <- function(
   #weightDist1 <- exp(sDist1)/(exp(sDist1) + exp(sDist2))
   #weightDist2 <- exp(sDist2)/(exp(sDist1) + exp(sDist2))
   ##Changes to deal with very large sDist. Will get the same result
-  weightDist1 <- 1/(1+exp(sDist2-sDist1))
-  weightDist2 <- 1/(1+exp(sDist1-sDist2))
+  weightDist1 <- 1 / (1 + exp(sDist2 - sDist1))
+  weightDist2 <- 1 / (1 + exp(sDist1 - sDist2))
 
   ##Don't need this after changing caculating weightDist method
   # allNaInd=which(is.na(weightDist1) & is.na(weightDist2))
@@ -208,8 +205,6 @@ IntegrationByDistance <- function(
 
 
 #' FindNeighborsByDistance
-#' @inheritParams FindNeighbors
-#' @inheritParams RunUMAP
 #' @param dataObj  A \code{Seurat} object.
 #' @param distMatrix  distance matrix in graphs slot
 #' @param prune.SNN Sets the cutoff for acceptable Jaccard index when
@@ -223,11 +218,10 @@ IntegrationByDistance <- function(
 #' @param reduction.name Name of projected UMAP to store in the query
 #' @param reduction.key Value for the projected UMAP key
 #' @param k.param number of k
-#'
-#' @return
+#' @importFrom Seurat FindNeighbors DefaultAssay DefaultAssay<- RunUMAP
+#' @return a seurat object
 #' @export
 #'
-#' @examples
 FindNeighborsByDistance <- function(dataObj = NULL,
                                     distMatrix,
                                     prune.SNN = 1/15,

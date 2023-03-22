@@ -1,11 +1,13 @@
 #' gg_color_hue
 #'
 #' @param n number of colors
-#'
-#' @return
+#' @importFrom grDevices hcl
+#' @return a color palette
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
+#'   gg_color_hue(8)
+#' }
 gg_color_hue <- function(n) {
   hues = seq(15, 375, length = n + 1)
   hcl(h = hues, l = 65, c = 95)[1:n]
@@ -15,10 +17,16 @@ gg_color_hue <- function(n) {
 #'
 #' @param points sf data frame of points
 #' @importFrom sf st_combine st_voronoi st_collection_extract
-#' @return
+#' @importFrom sf st_geometry_type st_geometry st_intersects
+#' @return a sf data frame
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
+#'   location <- GetTissueCoordinates(object)
+#'   p <- st_as_sf(data.frame(x=location$y, y=dplyr::desc(location$x),
+#'   A=1:nrow(location)), coords=1:2)
+#'   v <- st_voronoi_point(p)
+#' }
 st_voronoi_point <- function(points){
   ## points must be POINT geometry
   # check for point geometry and execute if true
@@ -32,21 +40,26 @@ st_voronoi_point <- function(points){
 }
 
 #' AllSpatialDimPlot
-#' @inheritParams sp
-#' @inheritParams sf
-#' @inheritParams viridis
-#' @param object
-#' @param cluster.frame
-#' @param cluster.highlight
-#' @param col
-#' @param groups
-#' @param ...
-#' @importFrom sf st_as_sf st_convex_hull
+#' @param object a seurat object
+#' @param cluster.frame a logical value to define if show the cluster frame
+#' @param cluster.highlight the cluster id to show if \code{cluster.frame} is
+#' TRUE
+#' @param col a color palette
+#' @param groups the colname of clusters in metadata of object
+#' @param ... Arguments passed to \code{\link{ggplot}}
+#' @importFrom sf st_as_sf st_convex_hull st_union
 #' @importFrom sf st_intersection st_cast
-#' @return
+#' @importFrom ggplot2 ggplot geom_sf geom_point aes_string scale_color_manual
+#' @importFrom ggplot2 theme_void guide_legend guides ggtitle theme element_text
+#' @importFrom Seurat GetTissueCoordinates Cells
+#' @return a list of ggplot objects
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
+#'   plots <- AllSpatialDimPlot(object,
+#'   cluster.frame = F,
+#'   col = colors)
+#' }
 AllSpatialDimPlot <- function(object,
                               cluster.frame = TRUE,
                               cluster.highlight = NULL,
@@ -216,20 +229,35 @@ AllSpatialDimPlot <- function(object,
 
 #' AllSpatialFeaturePlot
 #'
-#' @param object
-#' @param normalizeMethod
-#' @param integreation.method
-#' @param features
-#' @param cluster.frame
-#' @param cluster.highlight
-#' @param col
-#' @param ...
-#' @importFrom sf st_as_sf st_convex_hull
+#' @param object a seurat object
+#' @param normalizeMethod parameter for choosing the assay for gene expression
+#' visualization. Can be either "SCT" or "log"
+#' @param integreation.method the integration method for the final clustering.
+#' related to the cluster frame if \code{cluster.frame} is TRUE
+#' @param features a vector to define features want to plot
+#' @param cluster.frame a logical value to define if show the cluster frame
+#' @param cluster.highlight the cluster id to show if \code{cluster.frame} is
+#' TRUE
+#' @param col a color palette
+#' @param ... Arguments passed to \code{\link{ggplot}}
+#' @importFrom sf st_as_sf st_convex_hull st_union
 #' @importFrom sf st_intersection st_cast
-#' @return
+#' @importFrom ggplot2 ggplot geom_sf geom_point aes_string scale_color_manual
+#' @importFrom ggplot2 scale_color_gradient2 scale_alpha
+#' @importFrom ggplot2 theme_void guide_legend guides ggtitle theme element_text
+#' @importFrom Seurat GetTissueCoordinates ScaleData
+#' @return a list of ggplot objects
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
+#'   plots <- AllSpatialFeaturePlot(object,
+#'   normalizeMethod = "SCT",
+#'   integreation.method = "wnn",
+#'   features = c("TM4SF1", "S100A4"),
+#'   cluster.frame = TRUE,
+#'   col = colors,
+#'   cluster.highlight = 1)
+#' }
 AllSpatialFeaturePlot <- function(
     object,
     normalizeMethod = c("SCT", "log"),

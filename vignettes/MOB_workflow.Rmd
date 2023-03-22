@@ -1,10 +1,10 @@
 ---
 title: "Adult_Mouse_Olfactory_Bulb Visium version"
-output:
-  html_document:
-    theme: united
-    df_print: kable
-  pdf_document: default
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Adult_Mouse_Olfactory_Bulb Visium version}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 date: 'Compiled: `r Sys.Date()`'
 ---
 
@@ -34,7 +34,7 @@ knitr::opts_chunk$set(
 
 # Overview
 
-```{r install, message = F, warning = F, echo = F}
+```{r install, message = F, warning = F, echo = F, eval = F}
 library(tidyverse)
 library(Seurat)
 library(stImage)
@@ -174,7 +174,7 @@ MOB_obj <- readRDS(paste0(data_path, "/", "MOB_object.rds"))
 
 ## DimPlot
 
-```{r DimPlot, fig.dim = c(12, 4), echo = T}
+```{r DimPlot, fig.dim = c(12, 4), echo = T, eval = F}
 p1 <- DimPlot(MOB_obj, reduction = 'st.umap', group.by = 'seurat_clusters', label = TRUE, 
               repel = TRUE, label.size = 2.5) + ggtitle("SCT") + NoLegend()
 p2 <- DimPlot(MOB_obj, reduction = 'if.umap', group.by = 'seurat_clusters', label = TRUE, 
@@ -186,7 +186,7 @@ p1 + p2 + p3
 
 ## SpatialDimPlot
 
-```{r SpatialDimPlot, fig.dim = c(12, 4), echo = T}
+```{r SpatialDimPlot, fig.dim = c(12, 4), echo = T, eval = F}
 DefaultAssay(MOB_obj) <- "Spatial"
 p4 <- SpatialDimPlot(MOB_obj, group.by = "SCT_snn_res.1.05", label = TRUE, label.box = F, label.size = 2) + ggtitle("SCT") & NoLegend()
 
@@ -204,7 +204,9 @@ p4 + p5 + p6 + p7+ p8
 
 
 <details>
-  <summary>**Session Info**</summary>
+
+<summary>**Session Info**</summary>
+
 ```{r}
 sessionInfo()
 ```

@@ -3,10 +3,9 @@
 #' @param spotsCoordinate coordinate information of spots
 #' @param n number of neighbor spots
 #'
-#' @return
+#' @return a list containing neighbors of spots
 #' @export
 #'
-#' @examples
 FindCoordinateNeighbor <- function(spotsCoordinate,
                                    n=6) {
 
@@ -30,10 +29,9 @@ FindCoordinateNeighbor <- function(spotsCoordinate,
 #' @param spotsImageSimilarity similarity matrix between spots calculated with
 #' the neighbor image features
 #'
-#' @return
+#' @return a gene expression matrix
 #' @export
 #'
-#' @examples
 ExtractGeneExpByNeighbor <- function(geneExp,
                                      spotToNeighborList,
                                      spotsImageSimilarity) {
@@ -69,7 +67,6 @@ ExtractGeneExpByNeighbor <- function(geneExp,
 
 
 #' dostLearn
-#' @inheritParams Seurat
 #' @param dataObj A \code{Seurat} object
 #' @param ipcaObj user provided image feature PCA object
 #' @param imageDimReducName image feature dimension reduction matrix in object
@@ -92,11 +89,13 @@ ExtractGeneExpByNeighbor <- function(geneExp,
 #' 3) physical distance only.
 #' @importFrom lsa cosine
 #' @importFrom Rfast2 dcora
-#' @return
+#' @importFrom Seurat GetAssayData CreateDimReducObject SetAssayData ScaleData
+#' @importFrom Seurat FindVariableFeatures DefaultAssay DefaultAssay<-
+#' @importFrom dplyr %>%
+#' @return a seurat object
 #' @export
 #'
-#' @examples
-#' \dontrun{
+#' @examples \dontrun{
 #' object <- dostLearn(
 #'   object,
 #'   pcaDim_i = 20,

@@ -175,10 +175,18 @@ extract_features_Visium <- function(spatialDir,
     scaleFactor=1
     if(is.null(patchSize)){
       patchSize=fromJSON(scaleFactorFile)$spot_diameter_fullres
+      message(paste0("Didn't define patchsize. Set the patch size to ",
+                     patchSize, " based on spot_diameter_fullres in ", scaleFactorFile))
     }
   } else {
     imgFile <- paste0(spatialDir,"/tissue_hires_image.png")
     scaleFactor <- fromJSON(scaleFactorFile)$tissue_hires_scalef
+    if(is.null(patchSize)){
+      patchSize=fromJSON(scaleFactorFile)$spot_diameter_fullres
+      patchSize=patchSize*scaleFactor
+      message(paste0("Didn't define patchsize. Set the patch size to ",
+                     patchSize, " based on spot_diameter_fullres X tissue_hires_scalef in ", scaleFactorFile))
+    }
   }
   image_list <- extract_features(imgFile,
                                  positionTable,

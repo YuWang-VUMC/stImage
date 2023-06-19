@@ -159,10 +159,16 @@ extract_features_Visium <- function(spatialDir,
     stop("Please check that if tissue_positions.csv or
          tissue_positions_list.csv exist under spatial folder!\n")
   }
-  positionTable <- read.csv(positionTableFile, header=FALSE, row.names=1)
+  first_line <- readLines(positionTableFile,n=1)
+  if(grepl("^barcode", first_line)){
+    positionTable <- read.csv(positionTableFile, header=TRUE, row.names=1)
+  }
+  else{
+    positionTable <- read.csv(positionTableFile, header=FALSE, row.names=1)
+  }
   positionTable <- positionTable[which(positionTable[,1]==1),]
   positionTable <- positionTable[,c(4:5)] #only need ImageY and ImageX
-
+  colnames(positionTable) <- c("row", "col")
   scaleFactorFile <- paste0(spatialDir,"/scalefactors_json.json")
   if(rawImage) {
     imgFile=imgFile
@@ -175,10 +181,10 @@ extract_features_Visium <- function(spatialDir,
     scaleFactor <- fromJSON(scaleFactorFile)$tissue_hires_scalef
   }
   image_list <- extract_features(imgFile,
-                                    positionTable,
-                                    patchSize=patchSize,
-                                    scaleFactor=scaleFactor,
-                                    ...)
+                                 positionTable,
+                                 patchSize=patchSize,
+                                 scaleFactor=scaleFactor,
+                                 ...)
 
   return(image_list)
 }

@@ -16,53 +16,54 @@ Depends:
 Imports:
     rlang,
     dplyr,
-    tidyr,
-    ggplot2,
     S4Vectors,
     grDevices,
+    tensorflow,
+    keras,
     png,
     Seurat,
     jsonlite,
-    tensorflow,
-    keras,
     plotrix,
     SpatialPCA,
     SPARK,
     Spectrum,
     IntNMF,
     omicade4,
-    tensorBSS,
     ssanv,
     BayesSpace,
     SingleCellExperiment,
     lsa,
+    sf,
+    ggplot2,
     Rfast2,
+    tensorBSS,
     rhdf5,
-    sp,
-    sf
+    hdf5r
 Suggests: 
     knitr, 
-    rmarkdown
+    rmarkdown,
+    sp
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.1
 VignetteBuilder: knitr
 Collate: 
-    'similarityIntegration.R'
-    'findSNNClusters.R'
-    'doBayesSpace.R'
+    'DoBayesSpace.R'
+    'SimilarityIntegration.R'
+    'FindSNNClusters.R'
     'DoBayesSpaceIntegration.R'
+    'DoSPARK.R'
+    'DoSpectrum.R'
     'DoTICA.R'
+    'DostLearn.R'
     'ExtractImageFeature.R'
     'FindNClusters.R'
+    'GetMIA.R'
     'LoadImageFeature.R'
-    'MultimodalIntegrationVisium.R'
+    'MultiModalIntegration.R'
     'SpatialPCAWorkflow.R'
-    'runDimReduc.R'
-    'MultimodalPreProcess.R'
+    'RunDimReduc.R'
+    'PreProcessing.R'
+    'SpatialAwareProcess.R'
     'Visualization.R'
-    'doSPARK.R'
-    'doSpectrum.R'
-    'dostLearn.R'
-    'getMIA.R'

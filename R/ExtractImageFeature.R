@@ -25,7 +25,7 @@
 #' @examples \dontrun{
 #' # ST platform
 #' imageFeatures.list <-
-#'   extract_features(
+#'   ExtractFeatures(
 #'     imgFile = rawimg,
 #'     positionTable = positionTable,
 #'     patchSize = patchsize,
@@ -36,7 +36,7 @@
 #' RGBquantile <- imageFeatures.list[["RGBquantile"]]
 #' }
 #'
-extract_features <- function(imgFile,
+ExtractFeatures <- function(imgFile,
                              positionTable,
                              patchSize = NULL,
                              scaleFactor = 1,
@@ -130,7 +130,7 @@ extract_features <- function(imgFile,
 #' \code{scalefactors_json.json} is used if not defined.
 #' @param rawImage If or not the raw image is used. FALSE by default.
 #' @param imgFile the image file used here if \code{rawImage} is TRUE.
-#' @param ... Arguments passed to \code{\link{extract_features}}
+#' @param ... Arguments passed to \code{\link{ExtractFeatures}}
 #'
 #' @return  A list of two matrices
 #' @importFrom jsonlite fromJSON
@@ -139,7 +139,7 @@ extract_features <- function(imgFile,
 #' @examples \dontrun{
 #' # Visium platform
 #' imageFeatures.list <-
-#'   extract_features_Visium(
+#'   ExtractFeaturesVisium(
 #'     spatial_path,
 #'     rawImage = T,
 #'     imgFile = rawimg,
@@ -147,10 +147,10 @@ extract_features <- function(imgFile,
 #' imageFeatures <- imageFeatures.list[["ImageFeature"]]
 #' RGBquantile <- imageFeatures.list[["RGBquantile"]]
 #' }
-extract_features_Visium <- function(spatialDir,
-                                    patchSize=NULL,
-                                    rawImage = FALSE,
-                                    imgFile=NULL, ...) {
+ExtractFeaturesVisium <- function(spatialDir,
+                                  patchSize=NULL,
+                                  rawImage = FALSE,
+                                  imgFile=NULL, ...) {
   if(file.exists(paste0(spatialDir,"/tissue_positions_list.csv"))){
     positionTableFile <- paste0(spatialDir,"/tissue_positions_list.csv")
   } else if(file.exists(paste0(spatialDir,"/tissue_positions.csv"))){
@@ -176,7 +176,8 @@ extract_features_Visium <- function(spatialDir,
     if(is.null(patchSize)){
       patchSize=fromJSON(scaleFactorFile)$spot_diameter_fullres
       message(paste0("Didn't define patchsize. Set the patch size to ",
-                     patchSize, " based on spot_diameter_fullres in ", scaleFactorFile))
+                     patchSize, " based on spot_diameter_fullres in ",
+                     scaleFactorFile))
     }
   } else {
     imgFile <- paste0(spatialDir,"/tissue_hires_image.png")
@@ -185,14 +186,16 @@ extract_features_Visium <- function(spatialDir,
       patchSize=fromJSON(scaleFactorFile)$spot_diameter_fullres
       patchSize=patchSize*scaleFactor
       message(paste0("Didn't define patchsize. Set the patch size to ",
-                     patchSize, " based on spot_diameter_fullres X tissue_hires_scalef in ", scaleFactorFile))
+                     patchSize,
+                     " based on spot_diameter_fullres",
+                     " X tissue_hires_scalef in ", scaleFactorFile))
     }
   }
-  image_list <- extract_features(imgFile,
-                                 positionTable,
-                                 patchSize=patchSize,
-                                 scaleFactor=scaleFactor,
-                                 ...)
+  image_list <- ExtractFeatures(imgFile,
+                                positionTable,
+                                patchSize=patchSize,
+                                scaleFactor=scaleFactor,
+                                ...)
 
   return(image_list)
 }

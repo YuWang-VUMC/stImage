@@ -1,7 +1,7 @@
 #' DoBayesSpaceIntegration
-#' @include doBayesSpace.R
-#' @include findSNNClusters.R
-#' @include similarityIntegration.R
+#' @include DoBayesSpace.R
+#' @include FindSNNClusters.R
+#' @include SimilarityIntegration.R
 #' @param dataObj A \code{Seurat} object.
 #' @param clusterNum number of clusters
 #' @param BayesSpaceClusterNum number of clusters by BayesSpace method
@@ -20,19 +20,29 @@ DoBayesSpaceIntegration <- function(dataObj,
                                    clusterNum = 10,
                                    BayesSpaceClusterNum = clusterNum,
                                    assay = c("SCT","ImageFeature")) {
-  #BayesSpace
-  dataObj <- doBayesSpace(
-    dataObj,
-    assay = assay[1],
-    nCluster = BayesSpaceClusterNum,
-    name = paste0(assay[1],"BayesSpace_Cluster", clusterNum)
-  )
-  dataObj <- doBayesSpace(
-    dataObj,
-    assay = assay[2],
-    nCluster = BayesSpaceClusterNum,
-    name = paste0(assay[2],"BayesSpace_Cluster", clusterNum)
-  )
+  done_BayesSpace_assay1 <- paste0(assay[1], "BayesSpace_Cluster",
+                                   clusterNum, "_Dist")
+  done_BayesSpace_assay2 <- paste0(assay[2], "BayesSpace_Cluster",
+                                   clusterNum, "_Dist")
+
+  if(is.null(dataObj@graphs[[done_BayesSpace_assay1]])){
+    #BayesSpace
+    dataObj <- DoBayesSpace(
+      dataObj,
+      assay = assay[1],
+      nCluster = BayesSpaceClusterNum,
+      name = paste0(assay[1],"BayesSpace_Cluster", clusterNum)
+    )
+  }
+
+  if(is.null(dataObj@graphs[[done_BayesSpace_assay2]])){
+    dataObj <- DoBayesSpace(
+      dataObj,
+      assay = assay[2],
+      nCluster = BayesSpaceClusterNum,
+      name = paste0(assay[2],"BayesSpace_Cluster", clusterNum)
+    )
+  }
   dataObj <- IntegrationByDistance(
     dataObj,
     distMatrix =
@@ -45,7 +55,7 @@ DoBayesSpaceIntegration <- function(dataObj,
   )
 
   dataObj <-
-    findSNNClusters(
+    FindSNNClusters(
       dataObj,
       nCluster = clusterNum,
       graph.name = "BayesSpace_DistIntegrated_snn",

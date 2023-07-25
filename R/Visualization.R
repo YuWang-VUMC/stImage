@@ -346,7 +346,8 @@ AllSpatialFeaturePlot <- function(
           sf_0 <- sf[sf$celltype %in% as.character(cluster.highlight),]
 
           plots[[features[i]]] <- ggplot(scale_features) +
-            geom_sf(data = st_union(sf_0), color = "black", size = 0.5, fill = NA) +
+            geom_sf(data = st_union(sf_0),
+                    color = "black", size = 0.5, fill = NA) +
             geom_point(aes_string(x = scale_features$y,
                                   y = dplyr::desc(scale_features$x),
                                   col = features[i],

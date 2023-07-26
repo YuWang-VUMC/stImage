@@ -26,9 +26,9 @@ install_github("YuWang-VUMC/stImage")
 
 ## Tutorial
 
--   [Adult Mouse Olfactory Bulb Spatial Gene Expression Dataset by Space Ranger 2.0.0](./vignettes/MOB_workflow.html)
+-   [Adult Mouse Olfactory Bulb Visium Dataset processed by Space Ranger 2.0.0](https://htmlpreview.github.io/?https://github.com/YuWang-VUMC/stImage/blob/master/vignettes/MOB_workflow.html)
 
--   [HER2 breast cancer data by ST platform](./vignettes/HER2_workflow.html)
+-   [HER2 breast cancer data by ST platform](https://htmlpreview.github.io/?https://github.com/YuWang-VUMC/stImage/blob/master/vignettes/HER2_workflow.html)
 
 The tutorial includes main example codes for multiple spatial transcriptomics datasets (e.g. Adult Mouse Olfactory Bulb and Human breast tumor)
 

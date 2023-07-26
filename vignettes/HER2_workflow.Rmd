@@ -26,6 +26,7 @@ knitr::opts_chunk$set(
   tidy.opts = list(width.cutoff = 95),
   message = FALSE,
   warning = FALSE,
+  results = 'asis', 
   fig.width = 10,
   time_it = TRUE
 )
@@ -259,6 +260,21 @@ HER2_dataObj_BayesSpace <- MultiModalIntegration(
   graph.list = list(paste0("SCTBayesSpace_Cluster", clusterNum, "_Dist"), 
                     paste0("ImageFeatureBayesSpace_Cluster", clusterNum, "_Dist")),
   MultimodalMethod = c("WNN"),
+  pcaDim_s = 20,
+  pcaDim_i = 20,
+  nCluster = clusterNum,
+  genePercentCut=0.25,
+  imagePercentCut=0.2)
+```
+
+
+```{r bayesspace_int, message = F, warning = F, echo = T, eval = T}
+HER2_dataObj_BayesSpace <- MultiModalIntegration(
+  HER2_dataObj_BayesSpace,
+  normalizeMethod = "SCT",
+  graph.list = list(paste0("SCTBayesSpace_Cluster", clusterNum, "_Similarity"), 
+                    paste0("ImageFeatureBayesSpace_Cluster", clusterNum, "_Similarity")),
+  MultimodalMethod = c("Spectrum"),
   pcaDim_s = 20,
   pcaDim_i = 20,
   nCluster = clusterNum,

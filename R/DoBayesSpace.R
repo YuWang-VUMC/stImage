@@ -50,8 +50,11 @@ DoBayesSpace <- function(dataObj,
   colnames(colData) <- gsub("y","row",colnames(colData))
   colnames(colData) <- gsub("x","col",colnames(colData))
 
-
   dataTable <- as.matrix(dataObj[[assay]]@data)
+
+  if(!identical(colnames(dataTable), rownames(colData))) {
+    colData <- colData[colnames(dataTable),]
+  }
   sce <- SingleCellExperiment(assays = list(logcounts = dataTable),
                               colData = colData)
   if (!is.null(reduction)) { #defined reduction, use reduction in dataObj

@@ -134,7 +134,7 @@ MultiModalIntegration <- function(
                            nCluster = nCluster)
     } else {
       object <- DoSpectrum(object,
-                           reduction.list = graph.list,
+                           graphs = graph.list,
                            nCluster = nCluster)
     }
   }

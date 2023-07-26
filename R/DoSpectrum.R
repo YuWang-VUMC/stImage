@@ -40,7 +40,10 @@ DoSpectrum <- function(object,
         CNN_kernel(t(object@reductions[[reduction.list[[i]]]]@cell.embeddings))
     }
   } else if (!is.null(graphs)) {  #defined graphs. get similarity from graphs
-    similarityList <- object@graphs[graphs]
+    similarityList=NULL
+    for (i in 1:length(graphs)) {
+      similarityList[[graphs[[i]]]] <- object@graphs[[graphs[[i]]]]
+    }
   }
 
   if (clusterEachModality) { #doing single cluster

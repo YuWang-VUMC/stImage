@@ -27,6 +27,7 @@ RunDimReduc <- function(object,
 
   DimReducName <- paste0(assay, "", DimReducMethod)
   DimReducKeyName <- paste0(DimReducName, "_")
+  DefaultAssay(object) <- assay
 
   if(DimReducMethod == "PCA") {
     if (is.null(customGenes)) {

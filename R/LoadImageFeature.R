@@ -113,7 +113,7 @@ LoadImageFeature <- function(countTable,
                              positionTable,
                              RGBquantile = NULL,
                              project = NULL,
-                             Class = NULL, ...) {
+                             Class = "SlideSeq", ...) {
   imageFeaturesObj <- CreateAssayObject(counts = t(imageFeatures))
   object <- CreateSeuratObject(countTable, project = project, assay = "Spatial")
   object[["ImageFeature"]] <- imageFeaturesObj

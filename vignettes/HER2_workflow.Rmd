@@ -1,0 +1,346 @@
+---
+title: "HER2 breast cancer data ST version"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{HER2 breast cancer data ST version}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+date: 'Compiled: `r Sys.Date()`'
+---
+
+```{r setup, include=FALSE}
+all_times <- list()  # store the time for each chunk
+knitr::knit_hooks$set(time_it = local({
+  now <- NULL
+  function(before, options) {
+    if (before) {
+      now <<- Sys.time()
+    } else {
+      res <- difftime(Sys.time(), now, units = "secs")
+      all_times[[options$label]] <<- res
+    }
+  }
+}))
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10,
+  time_it = TRUE
+)
+```
+
+
+# Overview
+
+```{r install, message = F, warning = F, echo = F, eval = T}
+library(tidyverse)
+library(Seurat)
+library(stImage)
+library(SpatialPCA)
+library(BayesSpace)
+library(patchwork)
+library(reticulate)
+use_condaenv(condaenv = "myenv")
+library(tensorflow)
+library(keras)
+```
+
+
+# Download raw dataset from Andersson et al. 2021
+
+HER2 breast cancer (Spatial Transcriptomics platform) dataset can be accessed at https://doi.org/10.5281/zenodo.4751624. After downloading and unzip, the following files will be needed:
+
+- [the gene expression matrix](H1.tsv)
+
+- [Coordinates](H1_position.csv)
+
+- [raw H&E image (TIFF)](HE_BT24044_D2.jpg)
+
+
+```{r define, echo = T, eval = T}
+tstamp <- gsub("-", "", as.character(Sys.Date()))
+data_path <- "/data/cqs/ywang/source/analysis"
+
+positionTableFile <- file.path(data_path, "H1_position.csv")
+positionTable <- read.csv(positionTableFile, header = F, row.names = 1)
+positionTable <- positionTable[,c(4,5)]
+colnames(positionTable) <- c("row", "col")
+
+countTableFile <- file.path(data_path, "H1.tsv")
+countTable <- read.table(countTableFile, header = T, row.names = 1, sep = "\t")
+row.names(countTable) <- paste0("X",row.names(countTable))
+
+rawimg <- file.path(data_path, "HE_BT24044_D2.jpg")
+
+sampleName <- "HER2.H1"
+patchsize <- 256
+```
+
+
+<br>
+
+# Extract features
+
+Image features and RGB quantile matrix will be extracted with VGG16 model of ImageNet from the raw H&E image.
+
+```{r extract.feature, echo = T, eval = F}
+imageFeatures_list <- ExtractFeaturesVisium(imgFile = rawimg,
+                                            positionTable = positionTable,
+                                            patchSize = patchsize,
+                                            rawImage = T,
+                                            savePatchOnImage = paste0(sampleName, "_rawpatch_", patchsize, ".png"))
+
+imageFeatures <- imageFeatures_list[["ImageFeature"]]
+RGBquantile <- imageFeatures_list[["RGBquantile"]]
+```
+
+Or they can be extracted with ResNet50 model using pytorch. And the extracted matrices can be directly loaded.
+
+```{r load.feature, echo = T, eval = T}
+imageFeatures <- read.table(system.file("extdata", "HER2.H1_imagefeature.tsv", package = "stImage"), header = T)
+RGBquantile <- read.table(system.file("extdata", "HER2.H1_RGBprofile.tsv", package = "stImage"), header = T)
+
+```
+
+
+<br>
+
+# Prepare object containing gene expression data and image feature matrix 
+
+## remove the 21 ring pattern genes mentioned in the orginal paper
+
+
+```{r filter_genes, echo = T, eval = T}
+ring_genes <- read.table("/data/cqs/ywang/Zhao_image/stImage/SpatialTranscriptomicsImage/stImage/Yuankai/st/HER2/21_ring_genes.tsv", header = F)
+ring_genes <- ring_genes$V1
+#ddsHTseq.raw <- ddsHTseq.raw[rowSums(DESeq2::counts(ddsHTseq.raw) > 2) > 4, ]
+countTable.filter <- countTable[,!(colnames(countTable) %in% ring_genes)] #613 15008
+```
+
+
+```{r load.data, echo = T, eval = T}
+HER2_Obj <- LoadImageFeature(countTable = t(countTable.filter),
+                             imageFeatures = imageFeatures,
+                             positionTable = positionTable,
+                             RGBquantile = RGBquantile,
+                             project = sampleName,
+                             Class = "ST")
+```
+
+
+<br>
+
+# Preprocessing of Spatial matrix and ImageFeature matrix
+
+```{r preprocessing, message = F, warning = F, echo = T, eval = T}
+clusterNum=6
+#PCA
+
+HER2_ObjPCA <- PreProcessing(
+    HER2_Obj,
+    pcaDim_s = 20,
+    pcaDim_i = 20,
+    pcaDim_c = 6,
+    normalizeMethod = "SCT",
+    DimReducMethod = "PCA",
+    prefiltergenePercentCut=0.1,
+    prefilterimagePercentCut=0.1,
+    genePercentCut = 0.25,
+    imagePercentCut = 0.2
+  )
+
+HER2_ObjPCA <- findSNNClusters(
+  HER2_ObjPCA,
+  dims = 1:20,
+  reduction = "SCTPCA",
+  nCluster = clusterNum
+)
+
+HER2_ObjPCA <- findSNNClusters(
+  HER2_ObjPCA,
+  dims = 1:20,
+  reduction = "ImageFeaturePCA",
+  nCluster = clusterNum
+)
+
+HER2_ObjPCA <- findSNNClusters(
+  HER2_ObjPCA,
+  reduction = "RGBPCA",
+  nCluster = clusterNum
+)
+
+```
+
+
+# Spatially aware processing
+
+## BayesSpace
+
+```{r bayesspace, message = F, warning = F, echo = T, eval = T}
+HER2_dataObj_BayesSpace <- SpatialAwareProcess(HER2_ObjPCA,
+                                               platform="ST",
+                                               assay="SCT",
+                                               slot = "data",
+                                               SpatialAwareMethod = "BayesSpace", 
+                                               clusterNum=clusterNum)
+HER2_dataObj_BayesSpace <- SpatialAwareProcess(HER2_ObjPCA,
+                                               platform="ST",
+                                               assay="ImageFeature",
+                                               slot = "data",
+                                               SpatialAwareMethod = "BayesSpace", 
+                                               clusterNum=clusterNum)
+
+```
+
+## SpatialPCA
+
+```{r spatialpca, message = F, warning = F, echo = T, eval = T}
+HER2_dataObj_SpatialPCA <- SpatialAwareProcess(HER2_ObjPCA,
+                                               platform="ST",
+                                               assay="SCT",
+                                               slot = "data",
+                                               SpatialAwareMethod = "SpatialPCA", 
+                                               clusterNum=clusterNum,
+                                               pcaDim_g = 20,
+                                               percentCut = 0.25)
+HER2_dataObj_SpatialPCA <- SpatialAwareProcess(HER2_ObjPCA,
+                                               platform="ST",
+                                               assay="ImageFeature",
+                                               slot = "data",
+                                               SpatialAwareMethod = "SpatialPCA", 
+                                               clusterNum=clusterNum,
+                                               pcaDim_i = 20,
+                                               percentCut = 0.2)
+
+```
+
+## stLearn
+
+```{r stlearn, message = F, warning = F, echo = T, eval = T}
+HER2_dataObj_stLearn <- SpatialAwareProcess(HER2_ObjPCA,
+                                            platform="ST",
+                                            assay="SCT",
+                                            slot = "data",
+                                            SpatialAwareMethod = "SpatialPCA", 
+                                            clusterNum=clusterNum,
+                                            pcaDim_g = 20,
+                                            pcaDim_i = 20,
+                                            percentCut = 0.03,
+                                            distanceMethod = "cosine", 
+                                            stLearnweights = "weights_matrix_all")
+```
+
+# Integration
+
+## PCA + Integration of multimodalities
+
+```{r pca_int, message = F, warning = F, echo = T, eval = T}
+HER2_ObjPCA <- MultiModalIntegration(
+  HER2_ObjPCA,
+  reduction.list = list("SCTPCA", "ImageFeaturePCA"),
+  normalizeMethod = "SCT",
+  MultimodalMethod = c("WNN", "MCIA", "tICA", "Spectrum"), #ignore IntNMF here due to super long runnnig time
+  pcaDim_s = 20,
+  pcaDim_i = 20,
+  nCluster = clusterNum,
+  genePercentCut=0.25,
+  imagePercentCut=0.2)
+```
+
+
+## BayesSpace + Integration of multimodalities
+
+```{r bayesspace_int, message = F, warning = F, echo = T, eval = T}
+HER2_dataObj_BayesSpace <- MultiModalIntegration(
+  HER2_dataObj_BayesSpace,
+  normalizeMethod = "SCT",
+  graph.list = list(paste0("SCTBayesSpace_Cluster", clusterNum, "_Dist"), 
+                    paste0("ImageFeatureBayesSpace_Cluster", clusterNum, "_Dist")),
+  MultimodalMethod = c("WNN", "Spectrum"),
+  pcaDim_s = 20,
+  pcaDim_i = 20,
+  nCluster = clusterNum,
+  genePercentCut=0.25,
+  imagePercentCut=0.2)
+```
+
+
+## SpatialPCA + Integration of multimodalities
+
+```{r spatialpca_int, message = F, warning = F, echo = T, eval = T}
+HER2_dataObj_SpatialPCA <- MultiModalIntegration(
+  HER2_dataObj_SpatialPCA,
+  normalizeMethod = "SCT",
+  reduction.list = list("SCTSpatialPCA", "ImageFeatureSpatialPCA"),
+  MultimodalMethod = c("WNN", "Spectrum"),
+  pcaDim_s = 20,
+  pcaDim_i = 20,
+  nCluster = clusterNum,
+  genePercentCut=0.25,
+  imagePercentCut=0.2)
+```
+
+
+## stLearn + Integration of multimodalities
+
+```{r stlearn_int, message = F, warning = F, echo = T, eval = T}
+HER2_dataObj_stLearn <- MultiModalIntegration(
+  HER2_dataObj_stLearn,
+  normalizeMethod = "SCT",
+  reduction.list = list("SCTNormalizedByImagePCA", "ImageFeaturePCA"),
+  MultimodalMethod = c("WNN", "MCIA", "tICA", "Spectrum"),
+  pcaDim_s = 20,
+  pcaDim_i = 20,
+  nCluster = clusterNum,
+  genePercentCut=0.25,
+  imagePercentCut=0.2)
+```
+
+
+# Visualization
+
+## DimPlot (using SpatialPCA + Integration of multimodalities as an example)
+
+```{r DimPlot, fig.dim = c(12, 4), echo = T, eval = T}
+cols = c("#3d348b", "#ff0054", "#f4e285", "#9e2a2b", "#e7c6ff", "#8cb369")
+HER2_Obj_SPCA_dim_plots <- list()
+
+HER2_Obj_SPCA_dim_plots <- AllSpatialDimPlot(HER2_dataObj_SpatialPCA,
+                                             cluster.frame = F,
+                                             #cluster.highlight = c("1"),
+                                             col = cols)
+HER2_dim_plots <- list()
+HER2_dim_plots[["Gene SpatialPCA"]] <- HER2_Obj_SPCA_dim_plots[[paste0("SCTSpatialPCA_cluster", clusterNum)]]
+HER2_dim_plots[["Image SpatialPCA"]] <- HER2_Obj_SPCA_dim_plots[[paste0("ImageFeatureSpatialPCA_cluster", clusterNum)]]
+HER2_dim_plots[["SpatialPCA + WNN"]] <- HER2_Obj_SPCA_dim_plots[[paste0("wnn_cluster", clusterNum)]]
+HER2_dim_plots[["SpatialPCA + Spectrum"]] <- HER2_Obj_SPCA_dim_plots[[paste0("Spectrum_Cluster", clusterNum)]]
+
+HER2_dim_plots[["Gene SpatialPCA"]] + HER2_dim_plots[["Image SpatialPCA"]] + HER2_dim_plots[["SpatialPCA + WNN"]] + HER2_dim_plots[["SpatialPCA + Spectrum"]] + plot_layout(ncol = 2)
+
+```
+
+## SpatialDimPlot
+
+```{r SpatialDimPlot, fig.dim = c(12, 4), echo = T, eval = T}
+DefaultAssay(HER2_dataObj_SpatialPCA) <- "Spatial"
+HER2_feature_plots_c3 <- AllSpatialFeaturePlot(HER2_dataObj_SpatialPCA,
+                                               normalizeMethod = "SCT",
+                                               integreation.method = "wnn",
+                                               features = "ERBB2",
+                                               cluster.frame = TRUE,
+                                               col = cols,
+                                               cluster.highlight = 3)
+HER2_feature_plots_c3
+```
+
+
+<details>
+
+<summary>**Session Info**</summary>
+
+```{r}
+sessionInfo()
+```
+</details>

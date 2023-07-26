@@ -34,7 +34,7 @@ knitr::opts_chunk$set(
 
 # Overview
 
-```{r install, message = F, warning = F, echo = F, eval = F}
+```{r install, message = F, warning = F, echo = F, eval = T}
 library(tidyverse)
 library(Seurat)
 library(stImage)
@@ -53,16 +53,22 @@ library(keras)
 Adult Mouse Olfactory Bulb (Spatial Gene Expression Dataset by Space Ranger 2.0.0) dataset can be accessed at https://www.10xgenomics.com/resources/datasets/adult-mouse-olfactory-bulb-1-standard-1. 
 
 The following files will be needed:
+
 - [The hdf5 file of the gene expression matrix](https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_filtered_feature_bc_matrix.h5)
+
 - [Spatial imaging data](https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_spatial.tar.gz)
+
 - [raw H&E image (TIFF)](https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_image.tif) (The raw image file is optional. It's only needed if planning to extract image features from the raw image.)
 
-After downloading the above files, supposed that all of the files are put under a folder called "MOB". THe spatial image data should be uncompressed and renamed to "spatial" by `tar zxvf Visium_Mouse_Olfactory_Bulb_spatial.tar.gz; mv Visium_Mouse_Olfactory_Bulb_spatial spatial`.
+
+After downloading the above files, supposed that all of the files are put under a folder called "MOB". The spatial image data should be uncompressed and renamed to "spatial" by: 
+
+`tar zxvf Visium_Mouse_Olfactory_Bulb_spatial.tar.gz; mv Visium_Mouse_Olfactory_Bulb_spatial spatial`.
 
 
 
-```{r define, echo = T, eval = F}
-data_path = "./"
+```{r define, echo = T, eval = T}
+data_path = "/data/cqs/ywang/Zhao_image/stImage/Adult_Mouse_Olfactory_Bulb"
 spatial_path <- paste(data_path, "spatial", sep = "/")
 h5_file <- "Visium_Mouse_Olfactory_Bulb_filtered_feature_bc_matrix.h5"
 
@@ -81,21 +87,22 @@ positionTableFile=paste(spatial_path, "tissue_positions_list.csv", sep = "/")
 
 Image features and RGB quantile matrix will be extracted with VGG16 model of ImageNet from the `tissue_hires_image.png` under `spatial` folder.
 
-```{r extract.feature, echo = T, eval = F}
-imageFeatures_list <- extract_features_Visium(spatial_path, 
-                                              rawImage = F, 
-                                              savePatchOnImage = "MOB_rawpatch.png")
+```{r extract.feature, echo = T, eval = T}
+imageFeatures_list <- ExtractFeaturesVisium(spatialDir = spatial_path,
+                                              rawImage = T,
+                                              imgFile = paste0(data_path, "/", rawimg))
 
 imageFeatures <- imageFeatures_list[["ImageFeature"]]
 RGBquantile <- imageFeatures_list[["RGBquantile"]]
 
+#imageFeatures_list2 <- ExtractFeaturesVisium(spatialDir = spatial_path)
 ```
 
 <br>
 
 # Prepare object containing gene expression data and image feature matrix 
 
-```{r load.data, echo = T, eval = F}
+```{r load.data, echo = T, eval = T}
 MOB_obj <- LoadImageFeatureVisium(data_path, 
                                   filename = h5_file,
                                   imageFeatures = imageFeatures,
@@ -108,10 +115,10 @@ MOB_obj <- LoadImageFeatureVisium(data_path,
 
 # Preprocess of Spatial matrix and ImageFeature matrix
 
-```{r data.process, echo = T, eval = F}
+```{r data.process, message = F, warning = F, echo = T, eval = T}
 clusterNum <- 8
 
-MOB_obj <- MultimodalPreProcess(
+MOB_obj <- PreProcessing(
   MOB_obj, 
   normalizeMethod = "SCT", 
   pcaDim_s=30, 
@@ -123,7 +130,7 @@ MOB_obj <- MultimodalPreProcess(
   genePercentCut = 0.2,
   imagePercentCut = 0.2)
 
-MOB_obj <- findSNNClusters(
+MOB_obj <- FindSNNClusters(
   MOB_obj,
   dims = 1:30,
   reduction = "SCTPCA",
@@ -131,7 +138,7 @@ MOB_obj <- findSNNClusters(
   resolutionMax = 3
 )
 
-MOB_obj <- findSNNClusters(
+MOB_obj <- FindSNNClusters(
   MOB_obj,
   dims = 1:30,
   reduction = "ImageFeaturePCA",
@@ -139,7 +146,7 @@ MOB_obj <- findSNNClusters(
   resolutionMax = 3
 )
 
-MOB_obj <- findSNNClusters(
+MOB_obj <- FindSNNClusters(
   MOB_obj,
   dims = 1:6,
   reduction = "RGBPCA",
@@ -147,7 +154,7 @@ MOB_obj <- findSNNClusters(
   resolutionMax = 3
 )
 
-MOB_obj <- MultiModalIntegrationVisium(
+MOB_obj <- MultiModalIntegration(
   MOB_obj,
   MultimodalMethod = "WNN",
   pcaDim_s = 30,
@@ -160,46 +167,32 @@ MOB_obj <- MultiModalIntegrationVisium(
 ```
 
 
-```{r save.rds, echo = T, eval = F}
-saveRDS(MOB_obj, paste0(data_path, "/", "MOB_object.rds"))
-```
-
-
-```{r load.rds, echo = F, eval = F}
-MOB_obj <- readRDS(paste0(data_path, "/", "MOB_object.rds"))
-```
-
-
 # Visualization
 
 ## DimPlot
 
-```{r DimPlot, fig.dim = c(12, 4), echo = T, eval = F}
-p1 <- DimPlot(MOB_obj, reduction = 'st.umap', group.by = 'seurat_clusters', label = TRUE, 
+```{r DimPlot, fig.dim = c(12, 4), echo = T, eval = T}
+p1 <- DimPlot(MOB_obj, reduction = 'SCTPCAUMAP', group.by = 'seurat_clusters', label = TRUE, 
               repel = TRUE, label.size = 2.5) + ggtitle("SCT") + NoLegend()
-p2 <- DimPlot(MOB_obj, reduction = 'if.umap', group.by = 'seurat_clusters', label = TRUE, 
+p2 <- DimPlot(MOB_obj, reduction = 'ImageFeaturePCAUMAP', group.by = 'seurat_clusters', label = TRUE, 
               repel = TRUE, label.size = 2.5) + ggtitle("ImageFeature") + NoLegend()
-p3 <- DimPlot(MOB_obj, reduction = 'wnn.umap', label = TRUE, repel = TRUE, label.size = 2.5) + ggtitle("WNN") + NoLegend()
+p3 <- DimPlot(MOB_obj, reduction = 'weighted.nnUMAP', label = TRUE, repel = TRUE, label.size = 2.5) + ggtitle("WNN") + NoLegend()
 
 p1 + p2 + p3
 ```
 
 ## SpatialDimPlot
 
-```{r SpatialDimPlot, fig.dim = c(12, 4), echo = T, eval = F}
+```{r SpatialDimPlot, fig.dim = c(12, 4), echo = T, eval = T}
 DefaultAssay(MOB_obj) <- "Spatial"
-p4 <- SpatialDimPlot(MOB_obj, group.by = "SCT_snn_res.1.05", label = TRUE, label.box = F, label.size = 2) + ggtitle("SCT") & NoLegend()
+p4 <- SpatialDimPlot(MOB_obj, group.by = "SCTPCA_cluster8", label = TRUE, label.box = F, label.size = 2) + ggtitle("SCT") & NoLegend()
 
 DefaultAssay(MOB_obj) <- "ImageFeature"
-p5 <- SpatialDimPlot(MOB_obj, group.by = "ImageFeature_snn_res.2.23", label = TRUE, label.box = F, label.size = 2) + ggtitle("ImageFeature") & NoLegend()
+p5 <- SpatialDimPlot(MOB_obj, group.by = "ImageFeaturePCA_cluster8", label = TRUE, label.box = F, label.size = 2) + ggtitle("ImageFeature") & NoLegend()
 
-p6 <- SpatialDimPlot(MOB_obj, group.by = "wsnn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("WNN") & NoLegend()
+p6 <- SpatialDimPlot(MOB_obj, group.by = "wnn_cluster8", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("WNN") & NoLegend()
 
-p7 <- SpatialDimPlot(MOB_obj, group.by = "mcia_snn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("MCIA") & NoLegend()
-
-p8 <- SpatialDimPlot(MOB_obj, group.by = "tica_snn_res.1.2", label = TRUE, label.box = F, repel = TRUE, label.size = 2) + ggtitle("tICA") & NoLegend()
-
-p4 + p5 + p6 + p7+ p8
+p4 + p5 + p6
 ```
 
 

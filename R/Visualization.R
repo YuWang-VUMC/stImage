@@ -283,7 +283,11 @@ AllSpatialFeaturePlot <- function(
     scale_exp <- ScaleData(exp, features = row.names(exp))
 
     location <- GetTissueCoordinates(object)
-
+    if (identical(colnames(location), c("imagerow","imagecol"))) {
+      #Visum, change to Y and X to match codes in other parts
+      colnames(location)=c("x","y")
+    }
+    
     wnnClusterName <-
       grep("wnn_cluster",
            colnames(object@meta.data),

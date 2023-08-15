@@ -261,27 +261,33 @@ AllSpatialDimPlot <- function(object,
 AllSpatialFeaturePlot <- function(
     object,
     normalizeMethod = c("SCT", "log"),
+    slot="data",
+    cl_id=NULL,
+    pt.size=0.5,
+    line.size=0.5,
     integreation.method = c("wnn", "mcia", "intnmf", "tica"),
     features = NULL,
     cluster.frame = TRUE,
     cluster.highlight = NULL,
     col = NULL,
     ...) {
-
+  
   if(is.null(features)){
     stop("Must provide the features you want to plot!")
   } else {
     if (normalizeMethod == "SCT") {
-      exp <- object@assays$SCT@data
+      #exp <- object@assays$SCT@data
+      exp <- slot(object@assays$SCT,x)
     } else if(normalizeMethod == "log"){
-      exp <- object@assays$Spatial@data
+      #exp <- object@assays$Spatial@data
+      exp <- slot(object@assays$Spatial,x)
     } else {
       stop("Please tell which slots of assays will be used to generate feature
            plots!")
     }
     exp <- as.matrix(exp)
     scale_exp <- ScaleData(exp, features = row.names(exp))
-
+    
     location <- GetTissueCoordinates(object)
     if (identical(colnames(location), c("imagerow","imagecol"))) {
       #Visum, change to Y and X to match codes in other parts
@@ -304,17 +310,22 @@ AllSpatialFeaturePlot <- function(
       grep("tica_snn_cluster",
            colnames(object@meta.data),
            value=TRUE)
-
-    if(integreation.method == "wnn") {
-      cl_id <- wnnClusterName
-    } else if(integreation.method == "mcia") {
-      cl_id <- mciaClusterName
-    } else if(integreation.method == "intnmf") {
-      cl_id <- intnmfClusterName
-    } else if(integreation.method == "tica") {
-      cl_id <- ticaClusterName
+    
+    if (is.null(cl_id)) {
+      #cl_id="SCTPCA_cluster6_renamed"
+      if(integreation.method == "wnn") {
+        cl_id <- wnnClusterName
+      } else if(integreation.method == "mcia") {
+        cl_id <- mciaClusterName
+      } else if(integreation.method == "intnmf") {
+        cl_id <- intnmfClusterName
+      } else if(integreation.method == "tica") {
+        cl_id <- ticaClusterName
+      }
     }
 
+
+    
     plots <- list()
     for (i in 1:length(features)) {
       cl <- setNames(object@meta.data[,cl_id],
@@ -332,7 +343,7 @@ AllSpatialFeaturePlot <- function(
       #if(is.null(col)){
       #  col <- palopal
       #}
-
+      
       if(cluster.frame){
         if(is.null(cluster.highlight)) {
           stop("Must provide the cluster ids when setting cluster.frame ==
@@ -344,20 +355,20 @@ AllSpatialFeaturePlot <- function(
                                    A=1:nrow(location)), coords=1:2)
           v <- st_voronoi_point(p)
           hull <- st_convex_hull(st_union(p))
-
+          
           vcut <- st_intersection(st_cast(v), hull)
           sf <- st_as_sf(vcut, celltype = cl)
           sf_0 <- sf[sf$celltype %in% as.character(cluster.highlight),]
-
+          
           plots[[features[i]]] <- ggplot(scale_features) +
             geom_sf(data = st_union(sf_0),
-                    color = "black", size = 0.5, fill = NA) +
+                    color = "black", size = line.size,linewidth =line.size, fill = NA) +
             geom_point(aes_string(x = scale_features$y,
                                   y = dplyr::desc(scale_features$x),
                                   col = features[i],
                                   fill = features[i],
                                   alpha = "alpha"),
-                       size = 0.5) +
+                       size = pt.size) +
             #scale_color_viridis(option="viridis") +
             ggtitle(features[i]) +
             #scale_color_gradient2(palette = "PiYG") +
@@ -376,7 +387,7 @@ AllSpatialFeaturePlot <- function(
                                 col = features[i],
                                 fill = features[i],
                                 alpha = "alpha"),
-                     size = 0.5) +
+                     size = pt.size) +
           #scale_color_viridis(option="viridis") +
           scale_color_gradient2(low = 'green', mid = 'white', high = 'red') +
           scale_alpha(range = c(0.2, 1)) +

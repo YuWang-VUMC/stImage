@@ -9,20 +9,52 @@ StImage is a R package for integrated analysis of spatial transcriptomics and th
   
 ## Installation
 
-You can install the latest version of stImage from GitHub with:
+
+Before installing stImage, dependencies should be installed first:
+
+```r
+# SPARK/SPARKX and SpatialPCA
+library(devtools)
+install_github('xzhoulab/SPARK')
+install_github("shangll123/SpatialPCA")
+
+#BioConductor packages
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install(c("rhdf5", "SingleCellExperiment", "BayesSpace", "omicade4"))
+
+```
+
+Users should also make sure to successfully install the *tensorflow* and *keras* following instruction [Tensorflow for R](https://tensorflow.rstudio.com/install/).
+
+```r
+#installation of tensorflow
+install.packages("tensorflow")
+
+#create python virtualenv. If already installed python, replace 'install_python()' with the path of excutable python.
+library(reticulate)
+path_to_python <- install_python()
+virtualenv_create("r-reticulate", python = path_to_python)
+
+library(tensorflow)
+install_tensorflow(envname = "r-reticulate")
+
+#installation of keras
+install.packages("keras")
+library(keras)
+install_keras(envname = "r-reticulate")
+
+#testing the installation
+library(tensorflow)
+tf$constant("Hello Tensorflow!")
+```
+Once Tensorflow and keras were successfully installed, you can then install the latest version of stImage from GitHub with:
 
 ```r
 library(devtools)
 install_github("YuWang-VUMC/stImage")
 ```
-
-## Dependencies
-
--   R version \>= 4.1.3.
--   R packages: tensorflow, keras, tensorBSS, jsonlite, ggplot2, patchwork, png,
-    Seurat, SpatialPCA, BayesSpace, plotrix, SPARK, Spectrum, cluster, IntNMF, 
-    omicade4, SingleCellExperiment, lsa, rhdf5, sf.
-
 
 ## Tutorial
 

@@ -22,6 +22,7 @@
 #' @importFrom plotrix draw.circle
 #' @importFrom dplyr %>%
 #' @importFrom grDevices dev.off as.raster png
+#' @export
 #' @examples \dontrun{
 #' # ST platform
 #' imageFeatures.list <-
@@ -37,11 +38,11 @@
 #' }
 #'
 ExtractFeatures <- function(imgFile,
-                             positionTable,
-                             patchSize = NULL,
-                             scaleFactor = 1,
-                             saveRawImage = FALSE,
-                             savePatchOnImage = NULL) {
+                            positionTable,
+                            patchSize = NULL,
+                            scaleFactor = 1,
+                            saveRawImage = FALSE,
+                            savePatchOnImage = NULL) {
 
   patchRadius <- as.integer(patchSize/2)
   model <- application_vgg16(weights = 'imagenet',

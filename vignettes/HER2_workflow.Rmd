@@ -43,7 +43,6 @@ library(SpatialPCA)
 library(BayesSpace)
 library(patchwork)
 library(reticulate)
-use_condaenv(condaenv = "myenv")
 library(tensorflow)
 library(keras)
 ```
@@ -268,7 +267,7 @@ HER2_dataObj_BayesSpace <- MultiModalIntegration(
 ```
 
 
-```{r bayesspace_int, message = F, warning = F, echo = T, eval = T}
+```{r bayesspace_int2, message = F, warning = F, echo = T, eval = T}
 HER2_dataObj_BayesSpace <- MultiModalIntegration(
   HER2_dataObj_BayesSpace,
   normalizeMethod = "SCT",

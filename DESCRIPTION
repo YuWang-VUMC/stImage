@@ -1,5 +1,5 @@
 Package: stImage
-Version: 0.0.0.9000
+Version: 0.0.1.0000
 Date: 2022-07-25
 Title: R package for integration analysis of spatial transcriptomics and morphology images
 Description: A toolkit for integration analysis of spatial transcriptomics data, including gene expression matrix and morphology images. 'stImage' aims to enable users to identify and interpret clusters of spots related to tissue morphology from spatial transcriptomic data. 

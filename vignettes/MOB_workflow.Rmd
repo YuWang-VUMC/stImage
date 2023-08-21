@@ -42,7 +42,6 @@ library(SpatialPCA)
 library(BayesSpace)
 library(patchwork)
 library(reticulate)
-use_condaenv(condaenv = "myenv")
 library(tensorflow)
 library(keras)
 ```

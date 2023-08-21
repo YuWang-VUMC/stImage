@@ -10,7 +10,7 @@
 #' @param nn.name Name of knn output on which to run UMAP
 #' @param reduction dimension reduction matrix in \code{reductions} slot
 #' @param nCluster  the number of clusters
-#' @importFrom SingleCellExperiment SingleCellExperiment reducedDims
+#' @importFrom SingleCellExperiment SingleCellExperiment reducedDims colData
 #' @importFrom SingleCellExperiment reducedDims<-
 #' @importFrom BayesSpace spatialPreprocess spatialCluster
 #' @importFrom Seurat VariableFeatures

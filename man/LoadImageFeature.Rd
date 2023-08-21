@@ -10,7 +10,7 @@ LoadImageFeature(
   positionTable,
   RGBquantile = NULL,
   project = NULL,
-  Class = NULL,
+  Class = "SlideSeq",
   ...
 )
 }

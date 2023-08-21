@@ -78,8 +78,7 @@ SpatialAwareProcess <- function(object,
       assay = assay,
       percentCut = percentCut,
       pcaDim = pcaDim,
-      customGenes=customGenes,
-      ...
+      customGenes=customGenes
     )
     object <- FindSNNClusters(object,
                               reduction = paste0(assay, "SpatialPCA"),

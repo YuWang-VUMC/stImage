@@ -114,7 +114,7 @@ MOB_obj <- LoadImageFeatureVisium(data_path,
 
 # Preprocess of Spatial matrix and ImageFeature matrix
 
-```{r data.process, message = F, warning = F, echo = T, eval = T}
+```{r data.process, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 clusterNum <- 8
 
 MOB_obj <- PreProcessing(

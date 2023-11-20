@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
   tidy.opts = list(width.cutoff = 95),
   message = FALSE,
   warning = FALSE,
-  results = 'asis', 
+  #results = 'asis', 
   fig.width = 10,
   time_it = TRUE
 )
@@ -134,7 +134,7 @@ HER2_Obj <- LoadImageFeature(countTable = t(countTable.filter),
 
 # Preprocessing of Spatial matrix and ImageFeature matrix
 
-```{r preprocessing, message = F, warning = F, echo = T, eval = T}
+```{r preprocessing, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 clusterNum=6
 #PCA
 
@@ -178,7 +178,7 @@ HER2_ObjPCA <- FindSNNClusters(
 
 ## BayesSpace
 
-```{r bayesspace, message = F, warning = F, echo = T, eval = T}
+```{r bayesspace, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_dataObj_BayesSpace <- SpatialAwareProcess(HER2_ObjPCA,
                                                platform="ST",
                                                assay="SCT",
@@ -196,7 +196,7 @@ HER2_dataObj_BayesSpace <- SpatialAwareProcess(HER2_dataObj_BayesSpace,
 
 ## SpatialPCA
 
-```{r spatialpca, message = F, warning = F, echo = T, eval = T}
+```{r spatialpca, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_dataObj_SpatialPCA <- SpatialAwareProcess(HER2_ObjPCA,
                                                platform="ST",
                                                assay="SCT",
@@ -218,7 +218,7 @@ HER2_dataObj_SpatialPCA <- SpatialAwareProcess(HER2_dataObj_SpatialPCA,
 
 ## stLearn
 
-```{r stlearn, message = F, warning = F, echo = T, eval = T}
+```{r stlearn, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_dataObj_stLearn <- SpatialAwareProcess(HER2_ObjPCA,
                                             platform="ST",
                                             assay="SCT",
@@ -236,7 +236,7 @@ HER2_dataObj_stLearn <- SpatialAwareProcess(HER2_ObjPCA,
 
 ## PCA + Integration of multimodalities
 
-```{r pca_int, message = F, warning = F, echo = T, eval = T}
+```{r pca_int, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_ObjPCA <- MultiModalIntegration(
   HER2_ObjPCA,
   reduction.list = list("SCTPCA", "ImageFeaturePCA"),
@@ -252,7 +252,7 @@ HER2_ObjPCA <- MultiModalIntegration(
 
 ## BayesSpace + Integration of multimodalities
 
-```{r bayesspace_int, message = F, warning = F, echo = T, eval = T}
+```{r bayesspace_int, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_dataObj_BayesSpace <- MultiModalIntegration(
   HER2_dataObj_BayesSpace,
   normalizeMethod = "SCT",
@@ -267,7 +267,7 @@ HER2_dataObj_BayesSpace <- MultiModalIntegration(
 ```
 
 
-```{r bayesspace_int2, message = F, warning = F, echo = T, eval = T}
+```{r bayesspace_int2, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_dataObj_BayesSpace <- MultiModalIntegration(
   HER2_dataObj_BayesSpace,
   normalizeMethod = "SCT",
@@ -284,7 +284,7 @@ HER2_dataObj_BayesSpace <- MultiModalIntegration(
 
 ## SpatialPCA + Integration of multimodalities
 
-```{r spatialpca_int, message = F, warning = F, echo = T, eval = T}
+```{r spatialpca_int, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_dataObj_SpatialPCA <- MultiModalIntegration(
   HER2_dataObj_SpatialPCA,
   normalizeMethod = "SCT",
@@ -300,7 +300,7 @@ HER2_dataObj_SpatialPCA <- MultiModalIntegration(
 
 ## stLearn + Integration of multimodalities
 
-```{r stlearn_int, message = F, warning = F, echo = T, eval = T}
+```{r stlearn_int, message = F, warning = F, echo = T, eval = T, results = 'hide'}
 HER2_dataObj_stLearn <- MultiModalIntegration(
   HER2_dataObj_stLearn,
   normalizeMethod = "SCT",

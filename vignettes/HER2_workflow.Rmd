@@ -50,23 +50,25 @@ library(keras)
 
 # Download raw dataset from Andersson et al. 2021
 
-HER2 breast cancer (Spatial Transcriptomics platform) dataset can be accessed at https://doi.org/10.5281/zenodo.4751624. After downloading and unzip, the following files will be needed:
+HER2 breast cancer (Spatial Transcriptomics platform) dataset can be accessed at https://doi.org/10.5281/zenodo.4751624. After downloading and unzip **code.zip** file, the following files will be needed:
 
-- [the gene expression matrix](H1.tsv)
+- the gene expression matrix: H1.tsv (gzip -d her2st-master/data/ST-cnts/H1.tsv.gz)
 
-- [Coordinates](H1_position.csv)
+- Coordinates: H1_labeled_coordinates.tsv (her2st-master/data/ST-pat/lbl/H1_labeled_coordinates.tsv)
 
-- [raw H&E image (TIFF)](HE_BT24044_D2.jpg)
+- raw H&E image: HE_BT24044_D2.jpg (her2st-master/data/ST-imgs/H/H1/HE_BT24044_D2.jpg)
 
 
 ```{r define, echo = T, eval = T}
 tstamp <- gsub("-", "", as.character(Sys.Date()))
 data_path <- "/data/cqs/ywang/source/analysis"
 
-positionTableFile <- file.path(data_path, "H1_position.csv")
-positionTable <- read.csv(positionTableFile, header = F, row.names = 1)
-positionTable <- positionTable[,c(4,5)]
+positionTableFile <- file.path(data_path, "H1_labeled_coordinates.tsv")
+positionTable <- read.table(positionTableFile, header = T, row.names = 1, sep = "\t")
+rownames(positionTable) <- paste0("X",round(positionTable$x),"x",round(positionTable$y))
+positionTable <- positionTable[,c(4,3)]
 colnames(positionTable) <- c("row", "col")
+positionTable <- positionTable[sort(rownames(positionTable)),]
 
 countTableFile <- file.path(data_path, "H1.tsv")
 countTable <- read.table(countTableFile, header = T, row.names = 1, sep = "\t")
@@ -75,7 +77,7 @@ row.names(countTable) <- paste0("X",row.names(countTable))
 rawimg <- file.path(data_path, "HE_BT24044_D2.jpg")
 
 sampleName <- "HER2.H1"
-patchsize <- 256
+patchsize <- 200
 ```
 
 
@@ -89,7 +91,6 @@ Image features and RGB quantile matrix will be extracted with VGG16 model of Ima
 imageFeatures_list <- ExtractFeatures(imgFile = rawimg,
                                       positionTable = positionTable,
                                       patchSize = patchsize,
-                                      rawImage = T,
                                       savePatchOnImage = paste0(sampleName, "_rawpatch_", patchsize, ".png"))
 
 imageFeatures <- imageFeatures_list[["ImageFeature"]]

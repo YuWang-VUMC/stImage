@@ -73,71 +73,83 @@ PreProcessing <- function(object,
   message("## Data filtering at raw level")
   ### gene level
   assay <- "Spatial"
+  DefaultAssay(object) <- assay
   percentCut <- prefiltergenePercentCut
-
-  minValue <- min(object[[assay]]@counts)
+  assayData_counts <- GetAssayData(object = object, assay = assay, slot = "counts")
+  minValue <- min(assayData_counts)
   if (minValue != 0) {
     warning(paste0("Min value in ", assay, " is not equal to 0.
                    Need to confirm data filtering by >=", minValue,
                    " percent is correct!"))
   }
-  geneExpressionPercent <- apply(object[[assay]]@counts, 1, function(x)
+  geneExpressionPercent <- apply(assayData_counts, 1, function(x)
     length(which(x > minValue)) / length(x))
   geneToKept <- names(which(geneExpressionPercent >= percentCut))
   message(paste0("## ", length(geneExpressionPercent) - length(geneToKept),
                  " features in ", assay, " assay were removed. ",
                  length(geneToKept), " kept."))
   #can only do this because object is new and no information in data
-  object[[assay]]@counts <- object[[assay]]@counts[geneToKept,]
-  object[[assay]]@data <- object[[assay]]@data[geneToKept,]
-
+  newdata_counts <- assayData_counts[geneToKept,]
+  #object <- SetAssayData(object = object, new.data = newdata_counts)
+  new_object <- CreateSeuratObject(newdata_counts, project = object@project.name, assay = assay, )
 
   ###ImageFeature
   assay <- "ImageFeature"
+  DefaultAssay(object) <- assay
   percentCut <- prefilterimagePercentCut
-
-  minValue <- min(object[[assay]]@counts)
+  assayData_counts <- GetAssayData(object = object, assay = assay, slot = "counts")
+  minValue <- min(assayData_counts)
   if (minValue != 0) {
     warning(paste0("Min value in ", assay, " is not equal to 0.
                    Need to confirm data filtering by >=", minValue,
                    " percent is correct!"))
   }
-  geneExpressionPercent <- apply(object[[assay]]@counts, 1, function(x)
+  geneExpressionPercent <- apply(assayData_counts, 1, function(x)
     length(which(x>minValue)) / length(x))
   geneToKept <- names(which(geneExpressionPercent >= percentCut))
   message(paste0("## ", length(geneExpressionPercent) - length(geneToKept),
                  " features in ", assay, " assay were removed. ",
                  length(geneToKept), " kept."))
   #can only do this because object is new and no information in data
-  object[[assay]]@counts <- object[[assay]]@counts[geneToKept,]
-  object[[assay]]@data <- object[[assay]]@data[geneToKept,]
+  newdata_counts <- assayData_counts[geneToKept,]
+  new_img_obj <- CreateAssayObject(newdata_counts)
+  #object <- SetAssayData(object = object, slot = "counts", new.data = newdata_counts)
+  new_object[[assay]] <- new_img_obj
+
+  if("RGB" %in% names(object@assays)){
+    assay <- "RGB"
+    new_rgb_obj <- CreateAssayObject(object[["RGB"]]$counts, key = "rgb_")
+    new_object@assays[["RGB"]] <- new_rgb_obj
+  }
+  new_object@images <- object@images
 
   #gene processing
   message("## Working on gene expression")
-  DefaultAssay(object) <- "Spatial"
+  DefaultAssay(new_object) <- "Spatial"
   if (normalizeMethod == "SCT") {
     assay <- "SCT"
-    object <-
-      SCTransform(object,
+    new_object <-
+      SCTransform(new_object,
                   assay = "Spatial",
+                  new.assay.name = assay,
                   verbose = FALSE,
                   residual.features = customGenes)
-    DefaultAssay(object) <- "SCT"
+    DefaultAssay(new_object) <- "SCT"
   } else if (normalizeMethod == "log") {
     assay <- "Spatial"
-    object <- NormalizeData(object)
+    new_object <- NormalizeData(new_object)
     if (!is.null(customGenes)) {
-      VariableFeatures(object) <- customGenes
+      VariableFeatures(new_object) <- customGenes
     } else {
-      object <- FindVariableFeatures(object)
+      new_object <- FindVariableFeatures(new_object)
     }
-    object <- ScaleData(object)
+    new_object <- ScaleData(new_object)
 
   } else {
     stop(paste0("normalizeMethod has to be SCT or log"))
   }
-  object <- RunDimReduc(
-    object,
+  new_object <- RunDimReduc(
+    new_object,
     DimReducMethod = DimReducMethod,
     assay = assay,
     percentCut = genePercentCut,
@@ -149,15 +161,17 @@ PreProcessing <- function(object,
   #image processing
   message("## Working on image features")
   assay <- "ImageFeature"
-  DefaultAssay(object) <- assay
-  VariableFeatures(object) <- rownames(object[[assay]])
-  object <-
-    NormalizeData(object, normalization.method = 'CLR', margin = 1)
-  object[[assay]]@data[is.na(object[[assay]]@data)] <- 0
-  object <- object %>% ScaleData()
+  DefaultAssay(new_object) <- assay
+  VariableFeatures(new_object) <- rownames(new_object[[assay]])
+  new_object <-
+    NormalizeData(new_object, normalization.method = 'CLR', margin = 1)
+  assayData_data <- GetAssayData(object = new_object, assay = assay, slot = "data")
+  assayData_data[is.na(assayData_data)] <- 0
+  new_object <- SetAssayData(object = new_object, slot = "data", new.data = assayData_data)
+  new_object <- new_object %>% ScaleData()
 
-  object <- RunDimReduc(
-    object,
+  new_object <- RunDimReduc(
+    new_object,
     DimReducMethod = DimReducMethod,
     assay = assay,
     percentCut = imagePercentCut,
@@ -166,18 +180,19 @@ PreProcessing <- function(object,
   )
 
   #RGB features processing
-  if ("RGB" %in% Seurat::Assays(object)) {
+  if ("RGB" %in% Seurat::Assays(new_object)) {
     message("## Working on RGB features")
 
     assay <- "RGB"
-    DefaultAssay(object) <- assay
-    VariableFeatures(object) <- row.names(object[[assay]])
-    rgb_norm <- 1 - (object@assays$RGB@data / 255)
-    object@assays$RGB@data <- as(object = rgb_norm, Class = 'dgCMatrix')
-    object <- object %>% ScaleData()
+    DefaultAssay(new_object) <- assay
+    VariableFeatures(new_object) <- row.names(new_object[[assay]])
+    assayData_data <- GetAssayData(object = new_object, assay = assay, slot = "data")
+    rgb_norm <- 1 - (assayData_data / 255)
+    new_object <- SetAssayData(object = new_object, slot = "data", new.data = as(object = rgb_norm, Class = 'dgCMatrix'))
+    new_object <- new_object %>% ScaleData()
 
-    object <- RunDimReduc(
-      object,
+    new_object <- RunDimReduc(
+      new_object,
       DimReducMethod = "PCA",
       assay = assay,
       percentCut = imagePercentCut,
@@ -186,5 +201,5 @@ PreProcessing <- function(object,
     )
   }
 
-  return(object)
+  return(new_object)
 }

@@ -67,7 +67,7 @@ AllSpatialDimPlot <- function(object,
                               groups=NULL,
                               ...) {
 
-  location <- GetTissueCoordinates(object)
+  location <- GetTissueCoordinates(object)[,c(1,2)]
   if (identical(colnames(location), c("imagerow","imagecol"))) {
     #Visum, change to Y and X to match codes in other parts
     colnames(location)=c("x","y")
@@ -271,29 +271,32 @@ AllSpatialFeaturePlot <- function(
     cluster.highlight = NULL,
     col = NULL,
     ...) {
-  
+
   if(is.null(features)){
     stop("Must provide the features you want to plot!")
   } else {
     if (normalizeMethod == "SCT") {
       #exp <- object@assays$SCT@data
-      exp <- slot(object@assays$SCT,x)
+      assay <- "SCT"
+      #exp <- slot(object@assays$SCT,x)
+      exp <- GetAssayData(object = object, assay = assay, slot = slot)
     } else if(normalizeMethod == "log"){
       #exp <- object@assays$Spatial@data
-      exp <- slot(object@assays$Spatial,x)
+      #exp <- slot(object@assays$Spatial,x)
+      exp <- GetAssayData(object = object, assay = "Spatial", slot = slot)
     } else {
       stop("Please tell which slots of assays will be used to generate feature
            plots!")
     }
     exp <- as.matrix(exp)
     scale_exp <- ScaleData(exp, features = row.names(exp))
-    
-    location <- GetTissueCoordinates(object)
+
+    location <- GetTissueCoordinates(object)[,c(1,2)]
     if (identical(colnames(location), c("imagerow","imagecol"))) {
       #Visum, change to Y and X to match codes in other parts
       colnames(location)=c("x","y")
     }
-    
+
     wnnClusterName <-
       grep("wnn_cluster",
            colnames(object@meta.data),
@@ -310,7 +313,7 @@ AllSpatialFeaturePlot <- function(
       grep("tica_snn_cluster",
            colnames(object@meta.data),
            value=TRUE)
-    
+
     if (is.null(cl_id)) {
       #cl_id="SCTPCA_cluster6_renamed"
       if(integreation.method == "wnn") {
@@ -325,7 +328,7 @@ AllSpatialFeaturePlot <- function(
     }
 
 
-    
+
     plots <- list()
     for (i in 1:length(features)) {
       cl <- setNames(object@meta.data[,cl_id],
@@ -343,7 +346,7 @@ AllSpatialFeaturePlot <- function(
       #if(is.null(col)){
       #  col <- palopal
       #}
-      
+
       if(cluster.frame){
         if(is.null(cluster.highlight)) {
           stop("Must provide the cluster ids when setting cluster.frame ==
@@ -355,11 +358,11 @@ AllSpatialFeaturePlot <- function(
                                    A=1:nrow(location)), coords=1:2)
           v <- st_voronoi_point(p)
           hull <- st_convex_hull(st_union(p))
-          
+
           vcut <- st_intersection(st_cast(v), hull)
           sf <- st_as_sf(vcut, celltype = cl)
           sf_0 <- sf[sf$celltype %in% as.character(cluster.highlight),]
-          
+
           plots[[features[i]]] <- ggplot(scale_features) +
             geom_sf(data = st_union(sf_0),
                     color = "black", size = line.size,linewidth =line.size, fill = NA) +

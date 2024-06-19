@@ -48,7 +48,7 @@ LoadImageFeatureVisium <- function(dataDir,
                                    filter.matrix = TRUE,
                                    to.upper = FALSE,
                                    image = NULL, ...) {
-
+  options(Seurat.object.assay.version = "v3")
   object <- Load10X_Spatial(dataDir,
                             filename = filename,
                             assay = assay,
@@ -65,10 +65,10 @@ LoadImageFeatureVisium <- function(dataDir,
                    " image features have SD=0 and were removed"))
   }
   imageFeaturesObj <- CreateAssayObject(counts = t(imageFeatures))
-  object[["ImageFeature"]] <- imageFeaturesObj
+  object@assays$ImageFeature <- imageFeaturesObj
   if(!is.null(RGBquantile)) {
     rgbObj <- CreateAssayObject(counts = t(RGBquantile))
-    object[["RGB"]] <- rgbObj
+    object@assays$RGB <- rgbObj
     message("Image Feature, expression matrix and RGB quantile matrix
             has been successfully loaded!")
   } else {
@@ -114,15 +114,17 @@ LoadImageFeature <- function(countTable,
                              RGBquantile = NULL,
                              project = NULL,
                              Class = "SlideSeq", ...) {
+  options(Seurat.object.assay.version = "v3")
   imageFeaturesObj <- CreateAssayObject(counts = t(imageFeatures))
   object <- CreateSeuratObject(countTable, project = project, assay = "Spatial")
-  object[["ImageFeature"]] <- imageFeaturesObj
-  object[['images']] <- new(Class = Class,
-                            assay = "Spatial",
-                            coordinates = positionTable)
+  object@assays$ImageFeature <- imageFeaturesObj
+  object@images$image <- new(Class = Class,
+                             assay = "Spatial",
+                             key = "image_",
+                             coordinates = positionTable)
   if(!is.null(RGBquantile)) {
     rgbObj <- CreateAssayObject(counts = t(RGBquantile))
-    object[["RGB"]] <- rgbObj
+    object@assays$RGB <- rgbObj
     message("Image Feature, expression matrix and RGB quantile matrix
             has been successfully loaded!")
   } else {

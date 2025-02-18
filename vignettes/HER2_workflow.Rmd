@@ -352,6 +352,31 @@ HER2_feature_plots_c3
 ```
 
 
+# Evaluation
+
+
+```{r}
+#pdf(paste0("HER2","_DistConsistency.pdf"))
+plotDistConsistency(HER2_ObjPCA)+ggtitle("HER2")+theme_bw(base_size = 16)
+#dev.off()
+
+resultHer2Obj <- extractNeighborDist(HER2_ObjPCA)
+
+#pdf(paste0("HER2","_SimilarToNeighbors.pdf"))
+showSpotsDiff(resultHer2Obj,varName)+theme_bw(base_size = 16)+theme(legend.position="none")
+#dev.off()
+
+#pdf(paste0("HER2","_SimilarToNeighbors2.pdf"))
+showNeighborDist2(resultHer2Obj)+theme_bw(base_size = 16)+theme(legend.position="none")+xlim(-4,1.5)+ylim(-3.5,2)
+#dev.off()
+
+
+
+```
+
+
+
+
 <details>
 
 <summary>**Session Info**</summary>

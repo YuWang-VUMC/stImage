@@ -67,3 +67,5 @@ Collate:
     'PreProcessing.R'
     'SpatialAwareProcess.R'
     'Visualization.R'
+    'metricFunctions.R'
+    'normalizeGeneByImage.R'

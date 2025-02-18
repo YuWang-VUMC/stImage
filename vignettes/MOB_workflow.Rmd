@@ -93,7 +93,8 @@ imageFeatures_list <- ExtractFeaturesVisium(spatialDir = spatial_path,
 
 imageFeatures <- imageFeatures_list[["ImageFeature"]]
 RGBquantile <- imageFeatures_list[["RGBquantile"]]
-
+imageFeatures <- imageFeatures[sort(rownames(imageFeatures)), ]
+RGBquantile <- RGBquantile[sort(rownames(RGBquantile)), ]
 #imageFeatures_list2 <- ExtractFeaturesVisium(spatialDir = spatial_path)
 ```
 

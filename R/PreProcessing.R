@@ -2,6 +2,7 @@
 #' @include RunDimReduc.R
 #' @param object A \code{Seurat} object prepared by \code{LoadImageFeature} or
 #' \code{LoadImageFeatureVisium}
+#' @param gene_assay set assay name of the gene matrix for different platform.
 #' @param normalizeMethod the normalization method for gene expression matrix.
 #' \code{log} for \code{LogNormalize}, \code{SCT} for \code{SCTransform}.
 #' @param pcaDim_s number of PCs when running dimension reduction on gene
@@ -50,6 +51,7 @@
 #' }
 #'
 PreProcessing <- function(object,
+                          gene_assay = "RNA",
                           normalizeMethod = c("SCT", "log"),
                           pcaDim_s = 30,
                           pcaDim_i = 30,
@@ -63,16 +65,16 @@ PreProcessing <- function(object,
                           ...) {
   normalizeMethod <- match.arg(normalizeMethod)
   DimReducMethod <- match.arg(DimReducMethod)
-
+  
   if (!is.null(customGenes)) {
     message("## customGenes defined and wil be used for analysis.
             FindVariableFeatures will not be performed.")
   }
-
+  
   #data filtering at raw data level
   message("## Data filtering at raw level")
   ### gene level
-  assay <- "Spatial"
+  assay <- gene_assay
   DefaultAssay(object) <- assay
   percentCut <- prefiltergenePercentCut
   assayData_counts <- GetAssayData(object = object, assay = assay, slot = "counts")
@@ -92,7 +94,42 @@ PreProcessing <- function(object,
   newdata_counts <- assayData_counts[geneToKept,]
   #object <- SetAssayData(object = object, new.data = newdata_counts)
   new_object <- CreateSeuratObject(newdata_counts, project = object@project.name, assay = assay, )
-
+  
+  #gene processing
+  message("## Working on gene expression")
+  DefaultAssay(new_object) <- assay
+  if (normalizeMethod == "SCT") {
+    assay <- "SCT"
+    new_object <-
+      SCTransform(new_object,
+                  assay = assay,
+                  new.assay.name = assay,
+                  verbose = FALSE,
+                  residual.features = customGenes)
+    DefaultAssay(new_object) <- "SCT"
+  } else if (normalizeMethod == "log") {
+    assay <- assay
+    new_object <- NormalizeData(new_object)
+    if (!is.null(customGenes)) {
+      VariableFeatures(new_object) <- customGenes
+    } else {
+      new_object <- FindVariableFeatures(new_object)
+    }
+    new_object <- ScaleData(new_object)
+    
+  } else {
+    stop(paste0("normalizeMethod has to be SCT or log"))
+  }
+  new_object <- RunDimReduc(
+    new_object,
+    DimReducMethod = DimReducMethod,
+    assay = assay,
+    percentCut = genePercentCut,
+    pcaDim = pcaDim_s,
+    customGenes=customGenes,
+    ...
+  )
+  
   ###ImageFeature
   assay <- "ImageFeature"
   DefaultAssay(object) <- assay
@@ -115,49 +152,7 @@ PreProcessing <- function(object,
   new_img_obj <- CreateAssayObject(newdata_counts)
   #object <- SetAssayData(object = object, slot = "counts", new.data = newdata_counts)
   new_object[[assay]] <- new_img_obj
-
-  if("RGB" %in% names(object@assays)){
-    assay <- "RGB"
-    new_rgb_obj <- CreateAssayObject(object[["RGB"]]$counts, key = "rgb_")
-    new_object@assays[["RGB"]] <- new_rgb_obj
-  }
-  new_object@images <- object@images
-
-  #gene processing
-  message("## Working on gene expression")
-  DefaultAssay(new_object) <- "Spatial"
-  if (normalizeMethod == "SCT") {
-    assay <- "SCT"
-    new_object <-
-      SCTransform(new_object,
-                  assay = "Spatial",
-                  new.assay.name = assay,
-                  verbose = FALSE,
-                  residual.features = customGenes)
-    DefaultAssay(new_object) <- "SCT"
-  } else if (normalizeMethod == "log") {
-    assay <- "Spatial"
-    new_object <- NormalizeData(new_object)
-    if (!is.null(customGenes)) {
-      VariableFeatures(new_object) <- customGenes
-    } else {
-      new_object <- FindVariableFeatures(new_object)
-    }
-    new_object <- ScaleData(new_object)
-
-  } else {
-    stop(paste0("normalizeMethod has to be SCT or log"))
-  }
-  new_object <- RunDimReduc(
-    new_object,
-    DimReducMethod = DimReducMethod,
-    assay = assay,
-    percentCut = genePercentCut,
-    pcaDim = pcaDim_s,
-    customGenes=customGenes,
-    ...
-  )
-
+  
   #image processing
   message("## Working on image features")
   assay <- "ImageFeature"
@@ -169,7 +164,7 @@ PreProcessing <- function(object,
   assayData_data[is.na(assayData_data)] <- 0
   new_object <- SetAssayData(object = new_object, slot = "data", new.data = assayData_data)
   new_object <- new_object %>% ScaleData()
-
+  
   new_object <- RunDimReduc(
     new_object,
     DimReducMethod = DimReducMethod,
@@ -178,11 +173,18 @@ PreProcessing <- function(object,
     pcaDim = pcaDim_i,
     ...
   )
-
+  
+  if("RGB" %in% names(object@assays)){
+    assay <- "RGB"
+    new_rgb_obj <- CreateAssayObject(object[["RGB"]]$counts, key = "rgb_")
+    new_object@assays[["RGB"]] <- new_rgb_obj
+  }
+  new_object@images <- object@images
+  
   #RGB features processing
   if ("RGB" %in% Seurat::Assays(new_object)) {
     message("## Working on RGB features")
-
+    
     assay <- "RGB"
     DefaultAssay(new_object) <- assay
     VariableFeatures(new_object) <- row.names(new_object[[assay]])
@@ -190,7 +192,7 @@ PreProcessing <- function(object,
     rgb_norm <- 1 - (assayData_data / 255)
     new_object <- SetAssayData(object = new_object, slot = "data", new.data = as(object = rgb_norm, Class = 'dgCMatrix'))
     new_object <- new_object %>% ScaleData()
-
+    
     new_object <- RunDimReduc(
       new_object,
       DimReducMethod = "PCA",
@@ -200,6 +202,6 @@ PreProcessing <- function(object,
       ...
     )
   }
-
+  
   return(new_object)
 }

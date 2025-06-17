@@ -24,24 +24,25 @@ RunDimReduc <- function(object,
                         pcaDim = 30,
                         customGenes = NULL,
                         ...) {
-
+  
   DimReducName <- paste0(assay, "", DimReducMethod)
   DimReducKeyName <- paste0(DimReducName, "_")
   DefaultAssay(object) <- assay
-
+  
   if(DimReducMethod == "PCA") {
     if (is.null(customGenes)) {
+      count_mtx <- GetAssayData(object = object, assay = assay, slot = "counts")
       #remove less frequent genes
-      geneExpressionPercent <- apply(object[[assay]]@counts, 1,
+      geneExpressionPercent <- apply(count_mtx, 1,
                                      function(x) length(which(x>0)) / length(x))
       VariableFeatures(object) <-
         setdiff(VariableFeatures(object),
                 names(which(geneExpressionPercent <= percentCut)))
     } else {
       VariableFeatures(object) <-
-        intersect(customGenes, row.names(object[[assay]]@counts))
+        intersect(customGenes, row.names(count_mtx))
     }
-
+    
     object <- RunPCA(object,
                      assay = assay,
                      npcs = pcaDim,
@@ -49,7 +50,7 @@ RunDimReduc <- function(object,
                      reduction.name = DimReducName,
                      reduction.key = DimReducKeyName)
   } else if(DimReducMethod == "SpatialPCA") {
-    rawcount <- as.matrix(object[[assay]]@counts)
+    rawcount <- as.matrix(count_mtx)
     #need to do gene filter here as CreateSeuratObject can't
     #deal with min.cells and min.features correctly to keep
     #all cells with >0 gene
@@ -66,7 +67,7 @@ RunDimReduc <- function(object,
     } else { #ST data
       locationFiltered <- location[colnames(rawcountFiltered), ]
     }
-
+    
     ##Can't use CreateSpatialPCAObject here as it will use
     ##SCTransform for normalization ,which is not good for image features
     ##Use @scale.data directly

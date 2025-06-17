@@ -1,5 +1,6 @@
 #' integrating and processing for Visium/ST dataset
 #' @param object A \code{Seurat} object.
+#' @param gene_assay set assay name of the gene matrix for different platform.
 #' @param normalizeMethod the normalization method for gene expression matrix.
 #' \code{log} for \code{LogNormalize}, \code{SCT} for \code{SCTransform}.
 #' @param reduction.list list of dimension reduction matrices for integration
@@ -53,6 +54,7 @@
 #'
 MultiModalIntegration <- function(
     object,
+    gene_assay = "RNA",
     normalizeMethod = c("SCT", "log"),
     reduction.list = list("SCTPCA", "ImageFeaturePCA"),
     graph.list = NULL,
@@ -74,13 +76,14 @@ MultiModalIntegration <- function(
   normalizeMethod <- match.arg(normalizeMethod)
   MultimodalMethod <- match.arg(MultimodalMethod,several.ok = TRUE)
   message("Integration by ", paste(MultimodalMethod, collapse = ";"))
-
+  
   pcaDim_s <- min(pcaDim_s,
-                ncol(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
+                  ncol(object@reductions[[reduction.list[[1]]]]@cell.embeddings))
   pcaDim_i <- min(pcaDim_i,
-                ncol(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
-
+                  ncol(object@reductions[[reduction.list[[2]]]]@cell.embeddings))
+  
   if ("WNN" %in% MultimodalMethod) {
+    gene_weight_name <- paste0(gene_assay, ".weight")
     if(is.null(graph.list)) {
       # WNN
       object <- FindMultiModalNeighbors(
@@ -90,15 +93,16 @@ MultiModalIntegration <- function(
         knn.graph.name = "wknn",
         snn.graph.name = "wsnn",
         weighted.nn.name = "weighted.nn",
-        modality.weight.name = c("SCT.weight", "ImageFeature.weight"),
+        modality.weight.name = c(gene_weight_name, "ImageFeature.weight"),
         return.intermediate = TRUE
       )
-
+      
       if (WnnImageWeightFactor != 1) {
         modalityWeightObj <- (object@misc$modality.weight)
         modalityWeightObj@modality.weight.list[[reduction.list[[2]]]] <-
           modalityWeightObj@modality.weight.list[[reduction.list[[2]]]] *
-            WnnImageWeightFactor
+          WnnImageWeightFactor
+        
         object <- FindMultiModalNeighbors(
           object,
           reduction.list = reduction.list,
@@ -106,7 +110,7 @@ MultiModalIntegration <- function(
           knn.graph.name = "wknn",
           snn.graph.name = "wsnn",
           weighted.nn.name = "weighted.nn",
-          modality.weight.name = c("SCT.weight", "ImageFeature.weight"),
+          modality.weight.name = c(gene_weight_name, "ImageFeature.weight"),
           k.nn = k.nn,
           knn.range = knn.range,
           modality.weight = modalityWeightObj
@@ -125,7 +129,7 @@ MultiModalIntegration <- function(
       object <- DoBayesSpaceIntegration(object, clusterNum=nCluster)
     }
   }
-
+  
   #Spectrum
   if ("Spectrum" %in% MultimodalMethod) {
     if(is.null(graph.list)) {
@@ -138,42 +142,47 @@ MultiModalIntegration <- function(
                            nCluster = nCluster)
     }
   }
-
+  
   list <- list()
   if (normalizeMethod == "SCT") {
-    sct.data <- object@assays$SCT@data
+    assay = "SCT"
+    sct.data <- GetAssayData(object = object, assay = assay, slot = "data")
     geneExpressionPercent <-
       apply(sct.data, 1, function(x) length(which(x>0)) / length(x))
     filterFeatures <-
       setdiff(rownames(sct.data),
               names(which(geneExpressionPercent <= genePercentCut)))
     sct.data <- sct.data[filterFeatures, ]
-
+    
     list[["SCT"]] <- as.matrix(sct.data)
   } else if (normalizeMethod == "log") {
-    spatial.data <- object@assays$Spatial@data
+    assay = assay
+    spatial.data <- GetAssayData(object = object, assay = gene_assay, slot = "data")
     geneExpressionPercent <-
       apply(spatial.data, 1, function(x) length(which(x>0)) / length(x))
     filterFeatures <-
       setdiff(rownames(spatial.data),
               names(which(geneExpressionPercent <= genePercentCut)))
     spatial.data <- spatial.data[filterFeatures, ]
-
-    list[["Spatial"]] <- as.matrix(spatial.data)
+    
+    list[[gene_assay]] <- as.matrix(spatial.data)
   }
-  if.data <- object@assays$ImageFeature@data
+  assay = "ImageFeature"
+  if.data <- GetAssayData(object = object, assay = assay, slot = "data")
   imagePercent <- apply(if.data, 1, function(x) length(which(x>0)) / length(x))
   filterFeatures <-
     setdiff(rownames(if.data), names(which(imagePercent <= imagePercentCut)))
   if.data <- if.data[filterFeatures, ]
-
+  
   list[["ImageFeature"]] <- if.data
-
+  
   if ("RGB" %in% names(object@assays)) {
-    list[["RGB"]] <- as.matrix(object@assays$RGB@data)
+    assay = "RGB"
+    rgb.data <- GetAssayData(object = object, assay = assay, slot = "data")
+    list[["RGB"]] <- as.matrix(rgb.data)
   }
   list_pos <- list()
-
+  
   # create non-negative matrices
   for (j in 1:length(list)) {
     if (min(list[[j]]) < 0) {
@@ -183,10 +192,10 @@ MultiModalIntegration <- function(
     }
     list_pos[[j]] <- list_pos[[j]] / max(list_pos[[j]])
   }
-
+  
   #MCIA
   if ("MCIA" %in% MultimodalMethod) {
-    DefaultAssay(object) <- "SCT"
+    DefaultAssay(object) <- assay
     mcoin <- mcia(list, cia.nf = cia.nf)
     factor_mcia <- as.matrix(mcoin$mcoa$SynVar)
     rownames(factor_mcia) <-
@@ -220,7 +229,7 @@ MultiModalIntegration <- function(
         t(x)), k = IntNMF.nf)
     factors_intNMF <- as.matrix(factorizations_intnmf$W)
     colnames(factors_intNMF) <- paste0("intnmf_", 1:IntNMF.nf)
-    DefaultAssay(object) <- "SCT"
+    DefaultAssay(object) <- assay
     object[["intnmf"]] <-
       CreateDimReducObject(embeddings = factors_intNMF,
                            key = "intnmf_",

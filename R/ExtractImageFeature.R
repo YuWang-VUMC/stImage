@@ -48,7 +48,7 @@ ExtractFeatures <- function(imgFile,
   patchRadius <- as.integer(patchSize/2)
 
   model <- match.arg(model)
-  if (model=="application_resnet50") {
+  if (model=="resnet50") {
     model <- application_resnet50(weights = 'imagenet',
                          include_top = FALSE,
                          pooling='avg',

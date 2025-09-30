@@ -42,13 +42,23 @@ ExtractFeatures <- function(imgFile,
                             patchSize = NULL,
                             scaleFactor = 1,
                             saveRawImage = FALSE,
-                            savePatchOnImage = NULL) {
+                            savePatchOnImage = NULL,
+                            model=c("resnet50","vgg16")) {
 
   patchRadius <- as.integer(patchSize/2)
-  model <- application_vgg16(weights = 'imagenet',
-                             include_top = FALSE,
-                             pooling='avg',
-                             input_shape = c(patchSize, patchSize, 3))
+
+  model <- match.arg(model)
+  if (model=="resnet50") {
+    model <- application_resnet50(weights = 'imagenet',
+                         include_top = FALSE,
+                         pooling='avg',
+                         input_shape = c(patchSize, patchSize, 3))
+  } else {
+    model <- application_vgg16(weights = 'imagenet',
+                               include_top = FALSE,
+                               pooling='avg',
+                               input_shape = c(patchSize, patchSize, 3))
+  }
 
   img <- image_load(imgFile) %>% image_to_array()
   message(paste0("Loaded image file ", imgFile, " with size: ",

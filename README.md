@@ -71,7 +71,7 @@ stImage is licensed under the MIT License.
 
 ## Citation
 
-stImage [xxx](xxx).
+Yu Wang, Haichun Yang, Ruining Deng, Yuankai Huo, Qi Liu, Yu Shyr, Shilin Zhao. stImage: a versatile framework for optimizing spatial transcriptomic analysis through customizable deep histology and location informed integration Open Access. Briefings in Bioinformatics, Volume 26, Issue 5, September 2025, bbaf429 [paper](https://academic.oup.com/bib/article/26/5/bbaf429/8247981).
 
-doi: xxx
+https://doi.org/10.1093/bib/bbaf429
 

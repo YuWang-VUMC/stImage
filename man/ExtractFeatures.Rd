@@ -10,7 +10,8 @@ ExtractFeatures(
   patchSize = NULL,
   scaleFactor = 1,
   saveRawImage = FALSE,
-  savePatchOnImage = NULL
+  savePatchOnImage = NULL,
+  model = c("resnet50", "vgg16")
 )
 }
 \arguments{

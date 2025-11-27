@@ -4,10 +4,21 @@
 \alias{extractNeighborDist}
 \title{Title}
 \usage{
-extractNeighborDist(dataObj, neighborsK = 10)
+extractNeighborDist(
+  dataObj,
+  neighborsK = 10,
+  sampleN = 20000,
+  pcaN = 1:20,
+  reduction = "SCTPCA"
+)
 }
 \arguments{
+\item{dataObj}{input seurat object}
+
 \item{neighborsK}{number of neighbors to consider}
+}
+\value{
+distance matrix of neighbors
 }
 \description{
 Title

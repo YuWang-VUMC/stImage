@@ -6,6 +6,7 @@
 \usage{
 MultiModalIntegration(
   object,
+  gene_assay = "Spatial",
   normalizeMethod = c("SCT", "log"),
   reduction.list = list("SCTPCA", "ImageFeaturePCA"),
   graph.list = NULL,
@@ -27,6 +28,8 @@ MultiModalIntegration(
 }
 \arguments{
 \item{object}{A \code{Seurat} object.}
+
+\item{gene_assay}{set assay name of the gene matrix for different platform.}
 
 \item{normalizeMethod}{the normalization method for gene expression matrix.
 \code{log} for \code{LogNormalize}, \code{SCT} for \code{SCTransform}.}

@@ -9,18 +9,18 @@
 #' @param x result table from extractNeighborDist
 #' @param varName1 var for Neighbor distance. default is Neighbor.mean
 #' @param varName2 var for distance to compare with. default is Random.mean
-#' @param main
+#' @param main plot title
 #' @param ...
 #'
-#' @return
+#' @return average similarity plot 
 #' @export
 #'
 #' @examples
 AverageSimilarityPlot <- function(x,
-                          varName1 = "Neighbor.mean",
-                          varName2 = "Random.mean",
-                          main=paste0("Difference between ", varName1," and ", varName2),
-                          ...) {
+                                  varName1 = "Neighbor.mean",
+                                  varName2 = "Random.mean",
+                                  main=paste0("Difference between ", varName1," and ", varName2),
+                                  ...) {
   print("Propotion of positive and negative difference")
   print(table(sign(x[,varName1] - x[,varName2])) / nrow(x))
   
@@ -39,13 +39,14 @@ AverageSimilarityPlot <- function(x,
 
 
 
+
 #extract distance between Neighbors, and other spots
 #' Title
 #'
-#' @param dataObj
+#' @param dataObj input seurat object
 #' @param neighborsK number of neighbors to consider
 #'
-#' @return
+#' @return distance matrix of neighbors
 #' @export
 #'
 #' @examples
@@ -143,26 +144,26 @@ extractNeighborDist <- function(dataObj,
 #plot distance consistency between two modality embeddings
 #' Title
 #'
-#' @param dataObj
+#' @param dataObj seurat object
 #' @param i number of PCs to use
 #' @param sampleN number of samples in resampling
 #' @param normalize normalize distance by min distance, True or False
 #' @param diffCutoff cutoff value to highlight spot pairs 
 #' @param ...
 #'
-#' @return
+#' @return Modality Concordance Plot
 #' @export
 #'
 #' @examples
 ModalityConcordancePlot <- function(dataObj,
-                                i=1:20,
-                                sampleN=20000,
-                                normalize=TRUE,
-                                diffCutoff=5,
-                                geneReduction="SCTPCA",
-                                ImageReduction="ImageFeaturePCA",
-                                #highlight.cutoff=0.3,
-                                ...) {
+                                    i=1:20,
+                                    sampleN=20000,
+                                    normalize=TRUE,
+                                    diffCutoff=5,
+                                    geneReduction="SCTPCA",
+                                    ImageReduction="ImageFeaturePCA",
+                                    #highlight.cutoff=0.3,
+                                    ...) {
   #distance of spots
   temp1 <- dist(dataObj@reductions[[ImageReduction]]@cell.embeddings[,i])
   temp2 <- dist(dataObj@reductions[[geneReduction]]@cell.embeddings[,i])
@@ -177,13 +178,13 @@ ModalityConcordancePlot <- function(dataObj,
     temp2ToPlot <- as.vector(temp2)[j]
   }
   #plot(temp1ToPlot,temp2ToPlot,xlab="Distance between spots (Image)",ylab="Distance between spots (Gene)",pch=16,...)
-#  dataForPlot <- data.frame(Image = temp1ToPlot,
-#                            Gene = temp2ToPlot)
+  #  dataForPlot <- data.frame(Image = temp1ToPlot,
+  #                            Gene = temp2ToPlot)
   dataForPlot <- data.frame(Image = temp1ToPlot,
                             Gene = temp2ToPlot
                             #Issue1=ifelse(abs(temp1ToPlot-temp2ToPlot)>=highlight.cutoff,"Yes","No"),
                             #Issue2=ifelse(abs(log(temp1ToPlot/temp2ToPlot))>=abs(log(highlight.cutoff)),"Yes","No")
-                            )
+  )
   p <- ggplot(dataForPlot,aes(x=Image,y=Gene)) +
     geom_point( alpha = 0.6) +
     #geom_point(aes(colour=Issue1), alpha = 0.3) +
@@ -193,10 +194,10 @@ ModalityConcordancePlot <- function(dataObj,
     ylab("Gene Distance") +
     theme_bw()
   
+  print(cor(temp1ToPlot,temp2ToPlot,method="pearson"))
+  print(cor(temp1ToPlot,temp2ToPlot,method="sp"))
   return(p)
-  #print(cor(as.vector(temp1)[j],as.vector(temp2)[j]))
 }
-
 #Max Spot distance to neighbor, comparing with min spot distance to all non-neighbor spots
 #to indicate if the some spots are more similar to their non-neighbors
 #large (positive) means spot not similar to neighbor spots are similar to non-neighbor spots. Should NOT use spatial method
@@ -206,7 +207,7 @@ ModalityConcordancePlot <- function(dataObj,
 #' @param x result table from extractNeighborDist
 #' @param ...
 #'
-#' @return
+#' @return High Similarity Non-Neighbor Plot
 #' @export
 #'
 #' @examples
@@ -228,7 +229,7 @@ HighSimilarityNonNeighborPlot <- function(x, var.x="Neighbor.min",var.x.ref="All
   #dataForPlot$PlotValueCategory <- ifelse(temp3 > 0, "No", "Yes")
   print(table(dataForPlot$MoreSimilarityToNonNeighbor)/nrow(dataForPlot))
   p <- ggplot(dataForPlot, aes(x = temp3, y = temp2, colour = MoreSimilarityToNonNeighbor)) +
-  #p <- ggplot(dataForPlot, aes(x = temp3, y = temp2)) +
+    #p <- ggplot(dataForPlot, aes(x = temp3, y = temp2)) +
     geom_point() +
     xlab("Most Similar Neighbor vs. Most Similar Non-Neighbors") +
     ylab("Median Neighbors vs. Most Similar Non-Neighbors") +

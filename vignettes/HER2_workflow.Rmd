@@ -141,6 +141,7 @@ clusterNum=6
 
 HER2_ObjPCA <- PreProcessing(
     HER2_Obj,
+    gene_assay = "Spatial",
     pcaDim_s = 20,
     pcaDim_i = 20,
     pcaDim_c = 6,
@@ -358,7 +359,7 @@ HER2_feature_plots_c3
 ```{r, results='asis', fig.dim = c(8,8)}
 cat("\n\n## Distance Consistency \n\n")
 #pdf(paste0("HER2","_DistConsistency.pdf"))
-pdc.plt <- plotDistConsistency(HER2_ObjPCA)+ggtitle("HER2")+theme_bw(base_size = 16)
+pdc.plt <- ModalityConcordancePlot(dataObj)+ggtitle("HER2")+theme_bw(base_size = 16)+theme(legend.position = "none")
 #dev.off()
 print(pdc.plt)
 
@@ -366,13 +367,13 @@ resultHer2Obj <- extractNeighborDist(HER2_ObjPCA)
 
 cat("\n\n## Spot Distance To Neighbors \n\n")
 #pdf(paste0("HER2","_SimilarToNeighbors.pdf"))
-ssd.plt <- showSpotsDiff(resultHer2Obj)+theme_bw(base_size = 16)+theme(legend.position="none")
+ssd.plt <- AverageSimilarityPlot(resultHer2Obj,varName)+theme_bw(base_size = 16)+theme(legend.position="none")
 #dev.off()
 print(ssd.plt)
 
 cat("\n\n## Similarity To Neighbors \n\n")
 #pdf(paste0("HER2","_SimilarToNeighbors2.pdf"))
-snd.plt <- showNeighborDist2(resultHer2Obj)+theme_bw(base_size = 16)+theme(legend.position="none")+xlim(-4,1.5)+ylim(-3.5,2)
+snd.plt <- HighSimilarityNonNeighborPlot(resultHer2Obj)+theme_bw(base_size = 16)+theme(legend.position="none")+xlim(-4,1.5)+ylim(-3.5,2)
 #dev.off()
 print(snd.plt)
 

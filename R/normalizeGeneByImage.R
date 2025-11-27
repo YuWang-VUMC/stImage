@@ -1,10 +1,10 @@
 
 #' Title
 #'
-#' @param spotsCoordinate
-#' @param n
+#' @param spotsCoordinate spot coordinates
+#' @param n number of neighbor spots
 #'
-#' @return
+#' @return a list of neighbor spots
 #' @export
 #'
 #' @examples
@@ -24,11 +24,11 @@ FindCoordinateNeighbor <- function(spotsCoordinate, n=6) {
 
 #' Title
 #'
-#' @param geneExp
-#' @param spotToNeighborList
-#' @param spotsImageSimilarity
+#' @param geneExp gene expression matrix
+#' @param spotToNeighborList the output list from \code{\link{FindCoordinateNeighbor}} function
+#' @param spotsImageSimilarity spot similarity evaluated by image modality
 #'
-#' @return
+#' @return gene expression matrix weighted by expression matrices of neighbor spots
 #' @export
 #'
 #' @examples
@@ -63,15 +63,22 @@ ExtractGeneExpByNeighbor <- function(geneExp,
 
 #' Title
 #'
-#' @param dataObj
-#' @param ipcaObj
-#' @param nPCs
-#' @param distanceMethod
-#' @param spotsCoordinate
-#' @param coordinateNeighborN
-#' @param geneExp
+#' @param dataObj seurat object
+#' @param ipcaObj dimension reduction obejct
+#' @param distanceMethod method for distance calculation: cosine or euclidean
+#' @param spotsCoordinate coordinates of spots
+#' @param geneExp gene expression matrix. If NULL, use the gene expression matrix from object
+#' @param imageDimReducName Dimension reduction slot of Image Feature
+#' @param pcaDim_i number of PCs of Image Feature
+#' @param geneDimReducName Dimension reduction slot of gene expression
+#' @param pcaDim_g number of PCs of gene expression
+#' @param platform ST data platform used to generate the data
+#' @param normalizePC logic value. If or not normalize PC matrix
+#' @param assay assay of gene expression used
+#' @param dataSlot slot in assay of gene expression
+#' @param weights method for weighting the image information
 #'
-#' @return
+#' @return seurat object with new gene expression weighted by image feature
 #' @export
 #'
 #' @examples

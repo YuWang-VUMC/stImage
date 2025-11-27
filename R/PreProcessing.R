@@ -51,7 +51,7 @@
 #' }
 #'
 PreProcessing <- function(object,
-                          gene_assay = "RNA",
+                          gene_assay = "Spatial",
                           normalizeMethod = c("SCT", "log"),
                           pcaDim_s = 30,
                           pcaDim_i = 30,

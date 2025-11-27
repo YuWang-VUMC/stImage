@@ -54,7 +54,7 @@
 #'
 MultiModalIntegration <- function(
     object,
-    gene_assay = "RNA",
+    gene_assay = "Spatial",
     normalizeMethod = c("SCT", "log"),
     reduction.list = list("SCTPCA", "ImageFeaturePCA"),
     graph.list = NULL,

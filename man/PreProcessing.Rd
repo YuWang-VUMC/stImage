@@ -6,6 +6,7 @@
 \usage{
 PreProcessing(
   object,
+  gene_assay = "Spatial",
   normalizeMethod = c("SCT", "log"),
   pcaDim_s = 30,
   pcaDim_i = 30,
@@ -22,6 +23,8 @@ PreProcessing(
 \arguments{
 \item{object}{A \code{Seurat} object prepared by \code{LoadImageFeature} or
 \code{LoadImageFeatureVisium}}
+
+\item{gene_assay}{set assay name of the gene matrix for different platform.}
 
 \item{normalizeMethod}{the normalization method for gene expression matrix.
 \code{log} for \code{LogNormalize}, \code{SCT} for \code{SCTransform}.}

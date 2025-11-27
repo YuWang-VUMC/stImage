@@ -120,6 +120,7 @@ clusterNum <- 8
 
 MOB_obj <- PreProcessing(
   MOB_obj, 
+  gene_assay = "Spatial",
   normalizeMethod = "SCT", 
   pcaDim_s=30, 
   pcaDim_i=30, 

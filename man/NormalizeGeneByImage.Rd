@@ -23,7 +23,36 @@ NormalizeGeneByImage(
 )
 }
 \arguments{
-\item{geneExp}{}
+\item{dataObj}{seurat object}
+
+\item{ipcaObj}{dimension reduction obejct}
+
+\item{imageDimReducName}{Dimension reduction slot of Image Feature}
+
+\item{pcaDim_i}{number of PCs of Image Feature}
+
+\item{geneDimReducName}{Dimension reduction slot of gene expression}
+
+\item{pcaDim_g}{number of PCs of gene expression}
+
+\item{distanceMethod}{method for distance calculation: cosine or euclidean}
+
+\item{spotsCoordinate}{coordinates of spots}
+
+\item{platform}{ST data platform used to generate the data}
+
+\item{geneExp}{gene expression matrix. If NULL, use the gene expression matrix from object}
+
+\item{normalizePC}{logic value. If or not normalize PC matrix}
+
+\item{assay}{assay of gene expression used}
+
+\item{dataSlot}{slot in assay of gene expression}
+
+\item{weights}{method for weighting the image information}
+}
+\value{
+seurat object with new gene expression weighted by image feature
 }
 \description{
 Title
